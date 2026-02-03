@@ -1,13 +1,11 @@
 """Tests for text utilities."""
 
-import pytest
 from pipy_tui import (
     visible_width,
     word_wrap_line,
     find_word_boundary_left,
     find_word_boundary_right,
     truncate_to_width,
-    TextChunk,
 )
 
 

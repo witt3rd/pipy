@@ -1252,7 +1252,7 @@ provides-extras = ["dev", "tui"]
 
 [[package]]
 name = "pipy-tui"
-version = "0.1.0"
+version = "0.51.2"
 source = { editable = "tui" }
 dependencies = [
     { name = "rich" },

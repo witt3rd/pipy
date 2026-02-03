@@ -1,6 +1,6 @@
 """PiEditor - Multi-line editor widget with autocomplete."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import ClassVar
 
 from rich.console import RenderableType
@@ -9,16 +9,12 @@ from textual.binding import Binding
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Static
 
-from .autocomplete import AutocompleteProvider, AutocompleteItem, AutocompleteResult
-from .keybindings import EditorAction, KeybindingManager, KeybindingConfig, get_default_keybindings
+from .autocomplete import AutocompleteProvider, AutocompleteResult
+from .keybindings import EditorAction, KeybindingManager, KeybindingConfig
 from .utils import (
-    visible_width,
-    word_wrap_line,
     find_word_boundary_left,
     find_word_boundary_right,
-    TextChunk,
 )
 
 
@@ -257,9 +253,7 @@ class PiEditor(Widget, can_focus=True):
         """Insert a character at cursor."""
         self._push_undo()
         line = self._lines[self.cursor_line]
-        self._lines[self.cursor_line] = (
-            line[: self.cursor_col] + char + line[self.cursor_col :]
-        )
+        self._lines[self.cursor_line] = line[: self.cursor_col] + char + line[self.cursor_col :]
         self.cursor_col += len(char)
         self._notify_change()
         self._update_autocomplete()
@@ -282,9 +276,7 @@ class PiEditor(Widget, can_focus=True):
         if self.cursor_col > 0:
             self._push_undo()
             line = self._lines[self.cursor_line]
-            self._lines[self.cursor_line] = (
-                line[: self.cursor_col - 1] + line[self.cursor_col :]
-            )
+            self._lines[self.cursor_line] = line[: self.cursor_col - 1] + line[self.cursor_col :]
             self.cursor_col -= 1
             self._notify_change()
             self._update_autocomplete()
@@ -304,9 +296,7 @@ class PiEditor(Widget, can_focus=True):
         line = self._lines[self.cursor_line]
         if self.cursor_col < len(line):
             self._push_undo()
-            self._lines[self.cursor_line] = (
-                line[: self.cursor_col] + line[self.cursor_col + 1 :]
-            )
+            self._lines[self.cursor_line] = line[: self.cursor_col] + line[self.cursor_col + 1 :]
             self._notify_change()
         elif self.cursor_line < len(self._lines) - 1:
             # Join with next line
@@ -361,9 +351,7 @@ class PiEditor(Widget, can_focus=True):
         if len(lines) == 1:
             # Single line insert
             line = self._lines[self.cursor_line]
-            self._lines[self.cursor_line] = (
-                line[: self.cursor_col] + text + line[self.cursor_col :]
-            )
+            self._lines[self.cursor_line] = line[: self.cursor_col] + text + line[self.cursor_col :]
             self.cursor_col += len(text)
         else:
             # Multi-line insert
@@ -553,9 +541,7 @@ class PiEditor(Widget, can_focus=True):
             )
             if result and result.items:
                 self._autocomplete_result = result
-                self._autocomplete_index = min(
-                    self._autocomplete_index, len(result.items) - 1
-                )
+                self._autocomplete_index = min(self._autocomplete_index, len(result.items) - 1)
             else:
                 self._dismiss_autocomplete()
 

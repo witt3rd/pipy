@@ -1,7 +1,7 @@
 """Fuzzy matching utilities."""
 
 from dataclasses import dataclass
-from typing import Any, Callable, TypeVar
+from typing import Callable, TypeVar
 
 T = TypeVar("T")
 

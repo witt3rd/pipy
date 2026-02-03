@@ -1,6 +1,6 @@
 [project]
 name = "pipy-tui"
-version = "0.1.0"
+version = "0.51.2"
 description = "Terminal UI components for AI assistants, built on Textual. Python port inspired by Mario Zechner's pi-mono/tui."
 readme = "README.md"
 license = { text = "MIT" }

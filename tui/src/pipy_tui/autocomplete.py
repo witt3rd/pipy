@@ -1,10 +1,8 @@
 """Autocomplete provider system."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
-import os
 import subprocess
 
 from .fuzzy import fuzzy_filter, fuzzy_match
@@ -118,7 +116,7 @@ class SlashCommandProvider(AutocompleteProvider):
             cmd = next((c for c in self.commands if c.name == cmd_name), None)
             if cmd and cmd.argument_provider:
                 # Delegate to argument provider
-                arg_text = stripped[space_idx + 1 :]
+                stripped[space_idx + 1 :]
                 return cmd.argument_provider.get_suggestions(lines, cursor_line, cursor_col)
             return None
 
@@ -259,6 +257,13 @@ class FilePathProvider(AutocompleteProvider):
                 "f",
                 "--type",
                 "d",
+                "--hidden",  # Include hidden files (v0.51.2)
+                "--exclude",
+                ".git",
+                "--exclude",
+                ".git/*",
+                "--exclude",
+                ".git/**",
             ]
 
             if query:
@@ -278,6 +283,15 @@ class FilePathProvider(AutocompleteProvider):
             items = []
             for line in result.stdout.strip().split("\n"):
                 if not line:
+                    continue
+
+                # Filter out .git paths that may slip through (v0.51.2)
+                normalized_path = line.rstrip("/")
+                if (
+                    normalized_path == ".git"
+                    or normalized_path.startswith(".git/")
+                    or "/.git/" in normalized_path
+                ):
                     continue
 
                 is_dir = line.endswith("/") or (self.base_path / line).is_dir()
@@ -318,8 +332,9 @@ class FilePathProvider(AutocompleteProvider):
             for entry in search_dir.iterdir():
                 name = entry.name
 
-                # Skip hidden files unless query starts with .
-                if name.startswith(".") and not prefix.startswith("."):
+                # Always include hidden files except .git (v0.51.2)
+                # Skip .git directory entirely
+                if name == ".git":
                     continue
 
                 # Fuzzy match

@@ -1,6 +1,5 @@
 """Tests for PiEditor widget."""
 
-import pytest
 from pipy_tui import PiEditor, SlashCommand, SlashCommandProvider
 
 
@@ -184,10 +183,12 @@ class TestPiEditorAutocomplete:
         assert editor._autocomplete_result is None
 
     def test_autocomplete_navigation(self):
-        provider = SlashCommandProvider([
-            SlashCommand("help", "Help"),
-            SlashCommand("history", "History"),
-        ])
+        provider = SlashCommandProvider(
+            [
+                SlashCommand("help", "Help"),
+                SlashCommand("history", "History"),
+            ]
+        )
         editor = PiEditor(autocomplete=provider)
         editor.text = "/h"
         editor.cursor_col = 2

@@ -1,7 +1,6 @@
 """Tests for fuzzy matching."""
 
-import pytest
-from pipy_tui import fuzzy_match, fuzzy_filter, highlight_match, FuzzyMatch
+from pipy_tui import fuzzy_match, fuzzy_filter, highlight_match
 
 
 class TestFuzzyMatch:
