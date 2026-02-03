@@ -68,6 +68,23 @@ from .registry import (
     sync_models,
 )
 
+
+def get_available_models() -> list[str]:
+    """Get list of available model IDs from LiteLLM."""
+    try:
+        import litellm
+        return sorted(litellm.model_list or [])
+    except Exception:
+        # Fallback to common models
+        return [
+            "anthropic/claude-sonnet-4-20250514",
+            "anthropic/claude-3-opus-20240229",
+            "anthropic/claude-3.5-haiku-20241022",
+            "openai/gpt-4o",
+            "openai/gpt-4-turbo",
+            "google/gemini-2.0-flash",
+        ]
+
 # Events
 from .stream import (
     AssistantMessageEvent,
@@ -182,4 +199,6 @@ __all__ = [
     "AbortSignal",
     "AbortController",
     "AbortError",
+    # Utilities
+    "get_available_models",
 ]

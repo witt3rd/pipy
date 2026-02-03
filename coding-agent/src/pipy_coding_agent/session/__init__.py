@@ -37,6 +37,11 @@ from .manager import (
     load_entries_from_file,
 )
 
+# Convenience function
+def list_sessions(session_dir):
+    """List all sessions in a directory."""
+    return SessionManager.list_sessions(session_dir)
+
 __all__ = [
     # Manager
     "SessionManager",
@@ -73,4 +78,5 @@ __all__ = [
     "find_most_recent_session",
     "load_entries_from_file",
     "is_valid_session_file",
+    "list_sessions",
 ]

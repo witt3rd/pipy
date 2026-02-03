@@ -1,101 +1,116 @@
 # pipy-coding-agent Port Status
 
-**Honest assessment of what's ported vs upstream pi-coding-agent**
+**Tracking progress against upstream pi-coding-agent**
 
-## What Works ✅
+## CLI Flags
 
-### Core Libraries (Backend)
-- **Tools** (7/7): read, write, edit, bash, grep, find, ls - FULLY FUNCTIONAL
-- **Session storage**: JSONL format, tree structure, branching - WORKS
-- **Settings**: Global/project hierarchy, migration - WORKS
-- **Resources**: Skills loading, prompt templates, context files - WORKS
-- **Compaction**: Token estimation, cut points, summarization - WORKS (untested with real LLM)
-- **Model resolver**: Aliases (sonnet→claude-sonnet-4, etc) - WORKS
-- **Extensions**: Hook system, loader - BASIC (no Python module loading)
+| Flag | Status | Notes |
+|------|--------|-------|
+| `--help` | ✅ | Full help with examples |
+| `--version` | ✅ | |
+| `-m/--model` | ✅ | With aliases |
+| `--provider` | ✅ | Sets env var |
+| `--api-key` | ✅ | Sets env var |
+| `--thinking` | ✅ | off/minimal/low/medium/high |
+| `-p/--print` | ✅ | Non-interactive mode |
+| `--system-prompt` | ✅ | |
+| `--append-system-prompt` | ✅ | Supports file paths |
+| `-c/--continue` | ✅ | Continue previous session |
+| `-r/--resume` | ✅ | Interactive session picker |
+| `--session` | ✅ | Specific session file |
+| `--session-dir` | ✅ | Custom session directory |
+| `--no-session` | ✅ | Ephemeral mode |
+| `--tools` | 🔶 | Parsed, not wired |
+| `--no-tools` | ✅ | |
+| `-e/--extension` | 🔶 | Parsed, not wired |
+| `--skill` | 🔶 | Parsed, not wired |
+| `--prompt-template` | 🔶 | Parsed, not wired |
+| `--theme` | 🔶 | Parsed, not wired |
+| `--no-extensions` | 🔶 | Parsed, not wired |
+| `--no-skills` | 🔶 | Parsed, not wired |
+| `--mode` | 🔶 | text only, json/rpc not done |
+| `--export` | 🔶 | Parsed, export basic |
+| `--list-models` | ✅ | With pattern filter |
+| `--verbose` | ✅ | |
+| `--cwd` | ✅ | |
+| `@file` args | ✅ | Read file into prompt |
 
-### CLI
-- `-p/--prompt` single prompt mode - WORKS (if you have API key)
-- `--model` - WORKS
-- `--thinking` - WORKS  
-- `--no-session` - WORKS
-- Basic interactive loop - WORKS (barely)
+## Slash Commands
 
-## What's Missing ❌
+| Command | Status | Notes |
+|---------|--------|-------|
+| `/help` | ✅ | Lists all commands |
+| `/model` | ✅ | Change model |
+| `/thinking` | ✅ | Set thinking level |
+| `/clear` | ✅ | Clear and start fresh |
+| `/new` | ✅ | Start new session |
+| `/session` | ✅ | Show session info |
+| `/export` | ✅ | Basic HTML export |
+| `/copy` | ✅ | Copy to clipboard |
+| `/reload` | ✅ | Reload resources |
+| `/login` | ✅ | Shows env var instructions |
+| `/logout` | ✅ | N/A (env vars) |
+| `/quit` | ✅ | Exit |
+| `/exit` | ✅ | Exit |
+| `/fork` | 🔶 | Stub |
+| `/tree` | 🔶 | Stub |
+| `/compact` | 🔶 | Stub |
+| `/resume` | 🔶 | Stub (use --resume flag) |
+| `/settings` | ❌ | Needs TUI |
+| `/share` | ❌ | GitHub gist upload |
+| `/scoped-models` | ❌ | Needs TUI |
+| `/changelog` | ❌ | |
+| `/hotkeys` | ❌ | |
 
-### CLI Flags (17+ missing)
-- `--provider` - NOT IMPLEMENTED
-- `--api-key` - NOT IMPLEMENTED (env vars only)
-- `--continue/-c` - NOT IMPLEMENTED
-- `--resume/-r` - NOT IMPLEMENTED
-- `--session <path>` - NOT IMPLEMENTED
-- `--session-dir` - NOT IMPLEMENTED
-- `--models` (cycling) - NOT IMPLEMENTED
-- `--tools/--no-tools` - NOT IMPLEMENTED
-- `--export` - NOT IMPLEMENTED
-- `--extension/-e` - NOT IMPLEMENTED
-- `--skill` - NOT IMPLEMENTED
-- `--prompt-template` - NOT IMPLEMENTED
-- `--theme` - NOT IMPLEMENTED
-- `--list-models` - NOT IMPLEMENTED
-- `--mode` (json/rpc) - NOT IMPLEMENTED
-- `@file` args - NOT IMPLEMENTED
+## Core Features
 
-### Slash Commands (15+ missing)
-- `/login` - NOT IMPLEMENTED
-- `/logout` - NOT IMPLEMENTED
-- `/settings` - NOT IMPLEMENTED
-- `/export` - NOT IMPLEMENTED
-- `/share` - NOT IMPLEMENTED
-- `/copy` - NOT IMPLEMENTED
-- `/name` - NOT IMPLEMENTED
-- `/session` - NOT IMPLEMENTED
-- `/fork` - NOT IMPLEMENTED
-- `/tree` - NOT IMPLEMENTED
-- `/compact` - NOT IMPLEMENTED
-- `/resume` - NOT IMPLEMENTED
-- `/reload` - NOT IMPLEMENTED
-- `/new` - NOT IMPLEMENTED
-- `/hotkeys` - NOT IMPLEMENTED
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Tools (7) | ✅ | read, write, edit, bash, grep, find, ls |
+| Session persistence | ✅ | JSONL with tree structure |
+| Session branching | ✅ | Backend done, UI stub |
+| Settings | ✅ | Global + project hierarchy |
+| Skills loading | ✅ | From markdown |
+| Prompt templates | ✅ | With arg substitution |
+| Context files | ✅ | CLAUDE.md, AGENTS.md |
+| Compaction | ✅ | Backend done |
+| Model aliases | ✅ | sonnet, opus, etc |
+| Extensions | 🔶 | Hook system, no Python modules |
+| Streaming display | ❌ | Shows after completion |
+| OAuth | ❌ | Uses env vars via LiteLLM |
 
-### TUI (Interactive Mode)
-- **Entire TUI is missing** - We have readline, upstream has full Textual-style UI
-- No streaming token display
-- No tool execution visualization
-- No session picker
-- No model selector
-- No settings UI
-- No tree navigator
-- No OAuth dialogs
-- No theme support in UI
-- No keyboard shortcuts beyond basic readline
+## TUI (Interactive Mode)
 
-### Authentication
-- OAuth flows - NOT IMPLEMENTED
-- API key management - NOT IMPLEMENTED (just reads env vars)
-- auth.json storage - NOT IMPLEMENTED
+| Component | Status |
+|-----------|--------|
+| Basic readline loop | ✅ |
+| Slash command parsing | ✅ |
+| Streaming tokens | ❌ |
+| Tool execution display | ❌ |
+| Session picker | 🔶 (text) |
+| Model selector | ❌ |
+| Settings UI | ❌ |
+| Tree navigator | ❌ |
+| Footer/keybindings | ❌ |
+| Theme support | ❌ |
 
-### Package Management
-- `pi install/remove/update/list` - NOT IMPLEMENTED
-- Extension installation - NOT IMPLEMENTED
+## Test Coverage
+
+- **332 tests passed**, 2 skipped
+- Source: ~7,700 lines
+- Tests: ~4,800 lines
 
 ## Summary
 
-**Backend: ~80% ported** - Core libraries work, tested with 318 unit tests
+**CLI: ~70%** - Most flags implemented, some need wiring
 
-**CLI: ~20% ported** - Basic flags only, most features missing
+**Commands: ~60%** - Core commands work, tree/fork/compact are stubs
 
-**TUI: ~0% ported** - Just a readline loop, not the real interactive mode
+**TUI: ~10%** - Readline only, no real TUI yet
 
-**The "8 phases" built the backend SDK, not the user-facing application.**
+## Next Steps
 
-## To Match Upstream
-
-1. Add 17+ CLI flags
-2. Add 15+ slash commands  
-3. Build TUI with pipy-tui (30+ components)
-4. Add OAuth/auth system
-5. Add package management
-6. Wire up streaming display
-7. Add all the UI components
-
-This is substantial work - probably 3-4x what's been done.
+1. Wire up remaining CLI flags (tools, extensions, skills)
+2. Implement /fork, /tree, /compact commands
+3. Add streaming token display
+4. Build TUI with pipy-tui
