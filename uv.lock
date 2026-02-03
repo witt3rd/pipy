@@ -1216,7 +1216,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pipy-coding-agent"
-version = "0.1.0"
+version = "0.51.2"
 source = { editable = "coding-agent" }
 dependencies = [
     { name = "aiofiles" },

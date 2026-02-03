@@ -1,6 +1,7 @@
 """CLI for pipy-coding-agent."""
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 
@@ -72,8 +73,8 @@ def print_version() -> None:
     print(f"pipy-coding-agent v{__version__}")
 
 
-def run_interactive(session: AgentSession) -> None:
-    """Run interactive mode."""
+async def run_interactive_async(session: AgentSession) -> None:
+    """Run interactive mode (async)."""
     print(f"pipy-coding-agent (model: {session.model.model_id})")
     print("Type 'quit' or 'exit' to exit, '/help' for commands")
     print()
@@ -116,12 +117,17 @@ def run_interactive(session: AgentSession) -> None:
 
         # Send prompt
         try:
-            result = session.prompt(user_input)
+            result = await session.aprompt(user_input)
             print()
             print(result.response)
             print()
         except Exception as e:
             print(f"Error: {e}")
+
+
+def run_interactive(session: AgentSession) -> None:
+    """Run interactive mode."""
+    asyncio.run(run_interactive_async(session))
 
 
 def print_help() -> None:
@@ -143,15 +149,15 @@ Aliases:
 """)
 
 
-def run_single_prompt(session: AgentSession, prompt: str, verbose: bool = False) -> int:
-    """Run a single prompt and exit."""
+async def run_single_prompt_async(session: AgentSession, prompt: str, verbose: bool = False) -> int:
+    """Run a single prompt and exit (async)."""
     try:
         if verbose:
             print(f"Model: {session.model.model_id}")
             print(f"Prompt: {prompt}")
             print()
 
-        result = session.prompt(prompt)
+        result = await session.aprompt(prompt)
         print(result.response)
 
         if verbose:
@@ -163,6 +169,11 @@ def run_single_prompt(session: AgentSession, prompt: str, verbose: bool = False)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+
+
+def run_single_prompt(session: AgentSession, prompt: str, verbose: bool = False) -> int:
+    """Run a single prompt and exit."""
+    return asyncio.run(run_single_prompt_async(session, prompt, verbose))
 
 
 def main(args: list[str] | None = None) -> int:

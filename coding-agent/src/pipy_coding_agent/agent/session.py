@@ -1,13 +1,32 @@
 """Agent session - combines agent with session management."""
 
+import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Literal
 
-from pipy_agent import Agent, AgentEvent, agent_loop
+from pipy_agent import Agent, AgentEvent, AgentEndEvent, TextContent, AgentMessage, ToolResultMessage
 from pipy_ai import UserMessage, AssistantMessage
 
 from ..session import SessionManager, build_session_context
+
+
+def _dict_to_message(msg: dict | AgentMessage) -> AgentMessage:
+    """Convert a dict message from session storage to a Pydantic model."""
+    if not isinstance(msg, dict):
+        return msg  # Already a Pydantic model
+
+    role = msg.get("role", "user")
+
+    if role == "user":
+        return UserMessage(**msg)
+    elif role == "assistant":
+        return AssistantMessage(**msg)
+    elif role == "toolResult":
+        return ToolResultMessage(**msg)
+    else:
+        # Default to user message
+        return UserMessage(**msg)
 from ..settings import SettingsManager, CompactionSettings
 from ..resources import DefaultResourceLoader
 from ..prompt import build_system_prompt, BuildSystemPromptOptions
@@ -205,7 +224,26 @@ class AgentSession:
         options: PromptOptions | None = None,
     ) -> PromptResult:
         """
-        Send a prompt to the agent and get response.
+        Send a prompt to the agent and get response (sync wrapper).
+
+        Args:
+            message: User message
+            options: Prompt options
+
+        Returns:
+            PromptResult with response and metadata
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self.aprompt(message, options)
+        )
+
+    async def aprompt(
+        self,
+        message: str,
+        options: PromptOptions | None = None,
+    ) -> PromptResult:
+        """
+        Send a prompt to the agent and get response (async).
 
         Args:
             message: User message
@@ -218,22 +256,18 @@ class AgentSession:
         self._turn_count += 1
         self._emit("turn_start", {"turn": self._turn_count})
 
-        # Build user message
-        user_msg = UserMessage(role="user", content=message)
-
-        # Get conversation history from session
-        messages = []
+        # Load conversation history into agent
         if self._session:
             context = build_session_context(self._session.get_branch())
-            messages = context.messages
-
-        messages.append(user_msg)
+            # Convert dict messages from session to Pydantic models
+            messages = [_dict_to_message(m) for m in context.messages]
+            self._agent.replace_messages(messages)
 
         # Check if compaction needed
         compacted = False
         if self._config.auto_compact and self._session:
             compaction_settings = self._settings.get_compaction_settings()
-            context_tokens = estimate_context_tokens(messages).tokens
+            context_tokens = estimate_context_tokens(self._agent.messages).tokens
 
             if should_compact(
                 context_tokens,
@@ -245,7 +279,7 @@ class AgentSession:
                 compacted = True
                 self._emit("compaction_end", {"compacted": compacted})
 
-        # Run agent
+        # Track events
         tool_calls = 0
         response_text = ""
 
@@ -253,37 +287,52 @@ class AgentSession:
             nonlocal tool_calls, response_text
             self._emit(event.type, event)
 
-            if event.type == "tool_call":
+            if event.type == "tool_execution_end":
                 tool_calls += 1
-            elif event.type == "text":
-                response_text += event.text
+            elif event.type == "message_update":
+                # Extract text from streaming message
+                if hasattr(event, "message") and event.message:
+                    for block in event.message.content:
+                        if isinstance(block, TextContent):
+                            response_text = block.text
 
-        # Execute agent loop
-        result = agent_loop(
-            self._agent,
-            messages,
-            on_event=on_event,
-        )
+        # Subscribe to events
+        unsubscribe = self._agent.subscribe(on_event)
 
-        # Save to session
-        if self._session:
-            self._session.add_message(user_msg)
-            if result:
-                self._session.add_message(result)
+        try:
+            # Execute via Agent.prompt()
+            await self._agent.prompt(message)
+
+            # Get final response from agent messages
+            if self._agent.messages:
+                last_msg = self._agent.messages[-1]
+
+                # Check for errors
+                if hasattr(last_msg, "stop_reason") and last_msg.stop_reason == "error":
+                    error_msg = getattr(last_msg, "error_message", "Unknown error")
+                    raise RuntimeError(error_msg)
+
+                if hasattr(last_msg, "content"):
+                    for block in last_msg.content:
+                        if isinstance(block, TextContent):
+                            response_text = block.text
+                            break
+
+            # Save to session
+            if self._session:
+                # Save all new messages from agent
+                for msg in self._agent.messages:
+                    self._session.append_message(msg)
+
+        finally:
+            unsubscribe()
 
         self._emit("turn_end", {"turn": self._turn_count})
-
-        # Extract response
-        if result:
-            for block in result.content:
-                if hasattr(block, "type") and block.type == "text":
-                    response_text = block.text
-                    break
 
         return PromptResult(
             response=response_text,
             tool_calls=tool_calls,
-            tokens_used=result.usage.input + result.usage.output if result and result.usage else 0,
+            tokens_used=0,  # TODO: track usage from events
             compacted=compacted,
         )
 
@@ -295,9 +344,10 @@ class AgentSession:
         return []
 
     def clear(self) -> None:
-        """Clear conversation history."""
+        """Clear conversation history by starting a new session."""
         if self._session:
-            self._session.clear()
+            self._session.new_session()
+        self._agent.clear_messages()
 
     def export_html(self) -> str:
         """Export session to HTML."""

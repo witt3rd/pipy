@@ -361,12 +361,20 @@ class SessionManager:
 
     def append_message(self, message: AgentMessage) -> str:
         """Append a message. Returns entry ID."""
+        # Convert Pydantic model to dict for JSON serialization
+        if hasattr(message, "model_dump"):
+            msg_dict = message.model_dump(mode="json", exclude_none=True)
+        elif hasattr(message, "dict"):
+            msg_dict = message.dict(exclude_none=True)
+        else:
+            msg_dict = message  # Already a dict
+
         entry: SessionMessageEntry = {
             "type": "message",
             "id": generate_id(set(self._by_id.keys())),
             "parentId": self._leaf_id,
             "timestamp": now_iso(),
-            "message": message,
+            "message": msg_dict,
         }
         self._append_entry(entry)
         return entry["id"]
