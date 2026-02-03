@@ -5,7 +5,7 @@ import sys
 import tempfile
 import pytest
 
-from pipy_coding_agent.tools.bash import create_bash_tool
+from pipy_coding_agent.tools.bash import create_bash_tool, BashSpawnContext, BashSpawnHook
 
 
 @pytest.fixture
@@ -101,6 +101,37 @@ class TestBashTool:
         assert "Line1" in text
         assert "Line2" in text
         assert "Line3" in text
+
+
+class TestBashSpawnHook:
+    @pytest.mark.asyncio
+    async def test_spawn_hook_modifies_env(self, temp_dir):
+        """Test that spawn hook can modify environment variables."""
+        def hook(ctx: BashSpawnContext) -> BashSpawnContext:
+            ctx.env["MY_TEST_VAR"] = "hook_value"
+            return ctx
+        
+        tool = create_bash_tool(temp_dir, spawn_hook=hook)
+        
+        if sys.platform == "win32":
+            result = await tool.execute("call_1", {"command": "echo %MY_TEST_VAR%"})
+        else:
+            result = await tool.execute("call_1", {"command": "echo $MY_TEST_VAR"})
+        
+        assert "hook_value" in result.content[0].text
+
+    @pytest.mark.asyncio
+    async def test_spawn_hook_modifies_command(self, temp_dir):
+        """Test that spawn hook can modify command."""
+        def hook(ctx: BashSpawnContext) -> BashSpawnContext:
+            ctx.command = ctx.command.replace("PLACEHOLDER", "World")
+            return ctx
+        
+        tool = create_bash_tool(temp_dir, spawn_hook=hook)
+        
+        result = await tool.execute("call_1", {"command": "echo Hello PLACEHOLDER"})
+        
+        assert "Hello World" in result.content[0].text
 
 
 class TestBashToolTruncation:

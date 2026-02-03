@@ -9,11 +9,13 @@ from .manager import (
 from .types import (
     CompactionSettings,
     DEFAULT_SETTINGS,
+    DoubleEscapeAction,
     FollowUpMode,
     ImageSettings,
     RetrySettings,
     Settings,
     SteeringMode,
+    TerminalSettings,
     ThinkingBudgets,
     ThinkingLevel,
 )
@@ -30,8 +32,10 @@ __all__ = [
     "CompactionSettings",
     "RetrySettings",
     "ImageSettings",
+    "TerminalSettings",
     "ThinkingBudgets",
     "ThinkingLevel",
     "SteeringMode",
     "FollowUpMode",
+    "DoubleEscapeAction",
 ]

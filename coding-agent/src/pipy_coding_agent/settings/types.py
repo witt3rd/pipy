@@ -32,6 +32,14 @@ class ImageSettings:
 
 
 @dataclass
+class TerminalSettings:
+    """Settings for terminal behavior."""
+
+    show_images: bool = True  # Only relevant if terminal supports images
+    clear_on_shrink: bool = False  # Clear empty rows when content shrinks
+
+
+@dataclass
 class ThinkingBudgets:
     """Token budgets for thinking levels."""
 
@@ -44,6 +52,7 @@ class ThinkingBudgets:
 ThinkingLevel = Literal["off", "minimal", "low", "medium", "high", "xhigh"]
 SteeringMode = Literal["all", "one-at-a-time"]
 FollowUpMode = Literal["all", "one-at-a-time"]
+DoubleEscapeAction = Literal["fork", "tree", "none"]
 
 
 @dataclass
@@ -72,6 +81,7 @@ class Settings:
     compaction: CompactionSettings = field(default_factory=CompactionSettings)
     retry: RetrySettings = field(default_factory=RetrySettings)
     images: ImageSettings = field(default_factory=ImageSettings)
+    terminal: TerminalSettings = field(default_factory=TerminalSettings)
     thinking_budgets: ThinkingBudgets = field(default_factory=ThinkingBudgets)
 
     # Resource paths (arrays of local paths)
@@ -85,6 +95,12 @@ class Settings:
 
     # Model cycling
     enabled_models: list[str] = field(default_factory=list)
+
+    # UI behavior
+    double_escape_action: DoubleEscapeAction = "tree"
+    autocomplete_max_visible: int = 5
+    editor_padding_x: int = 0
+    show_hardware_cursor: bool = False
 
 
 DEFAULT_SETTINGS = Settings()

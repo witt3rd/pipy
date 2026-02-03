@@ -253,7 +253,7 @@ class TestFormatSkillsForPrompt:
 
         result = format_skills_for_prompt(skills)
 
-        assert "## Available Skills" in result
-        assert "### test-skill" in result
+        assert "<available_skills>" in result
+        assert "**test-skill**:" in result
         assert "A test skill" in result
-        assert "Do the thing." in result
+        assert "location: /path/to/skill.md" in result

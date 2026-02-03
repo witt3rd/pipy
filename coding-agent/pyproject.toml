@@ -1,6 +1,6 @@
 [project]
 name = "pipy-coding-agent"
-version = "0.1.0"
+version = "0.51.2"
 description = "AI coding assistant - Python port of @mariozechner/pi-coding-agent"
 readme = "README.md"
 license = { text = "MIT" }
@@ -18,8 +18,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "pipy-ai",
-    "pipy-agent",
+    "pipy-ai>=0.51.2",
+    "pipy-agent>=0.51.2",
     "pydantic>=2.0",
     "aiofiles>=24.0",
 ]

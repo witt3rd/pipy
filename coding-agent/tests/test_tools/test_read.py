@@ -34,6 +34,15 @@ class TestReadTool:
         assert "Line 2" in result.content[0].text
 
     @pytest.mark.asyncio
+    async def test_read_with_at_prefix(self, temp_dir):
+        """Test that @-prefixed paths are resolved correctly."""
+        tool = create_read_tool(temp_dir)
+        result = await tool.execute("call_1", {"path": "@test.txt"})
+        
+        assert len(result.content) == 1
+        assert "Hello, World!" in result.content[0].text
+
+    @pytest.mark.asyncio
     async def test_read_with_offset(self, temp_dir):
         tool = create_read_tool(temp_dir)
         result = await tool.execute("call_1", {"path": "test.txt", "offset": 2})

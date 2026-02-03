@@ -5,8 +5,9 @@ import os
 import sys
 import tempfile
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 
 from pipy_agent import AgentTool, AgentToolResult, AbortSignal, TextContent
 
@@ -17,6 +18,24 @@ from .truncate import (
     format_size,
     truncate_tail,
 )
+
+
+@dataclass
+class BashSpawnContext:
+    """Context for bash spawn hook."""
+
+    command: str
+    """The command to execute."""
+
+    cwd: str
+    """Working directory for execution."""
+
+    env: dict[str, str] = field(default_factory=lambda: dict(os.environ))
+    """Environment variables for execution."""
+
+
+# Type alias for spawn hook
+BashSpawnHook = Callable[[BashSpawnContext], BashSpawnContext]
 
 
 def _get_temp_file_path() -> str:
@@ -46,6 +65,7 @@ class BashOperations(Protocol):
         on_data: Any,
         signal: AbortSignal | None = None,
         timeout: float | None = None,
+        env: dict[str, str] | None = None,
     ) -> dict[str, int | None]:
         """Execute a command and stream output."""
         ...
@@ -61,6 +81,7 @@ class DefaultBashOperations:
         on_data,
         signal: AbortSignal | None = None,
         timeout: float | None = None,
+        env: dict[str, str] | None = None,
     ) -> dict[str, int | None]:
         """Execute command using asyncio subprocess."""
         if not os.path.exists(cwd):
@@ -74,12 +95,15 @@ class DefaultBashOperations:
             # On Unix, use bash
             shell_cmd = ["/bin/bash", "-c", command]
 
+        # Use provided env or default to current environment
+        exec_env = env if env is not None else dict(os.environ)
+
         process = await asyncio.create_subprocess_exec(
             *shell_cmd,
             cwd=cwd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            env=os.environ.copy(),
+            env=exec_env,
         )
 
         try:
@@ -137,10 +161,25 @@ BASH_PARAMETERS = {
 }
 
 
+def _resolve_spawn_context(
+    command: str,
+    cwd: str,
+    spawn_hook: BashSpawnHook | None = None,
+) -> BashSpawnContext:
+    """Resolve spawn context, applying hook if provided."""
+    base_context = BashSpawnContext(
+        command=command,
+        cwd=cwd,
+        env=dict(os.environ),
+    )
+    return spawn_hook(base_context) if spawn_hook else base_context
+
+
 def create_bash_tool(
     cwd: str | Path,
     operations: BashOperations | None = None,
     command_prefix: str | None = None,
+    spawn_hook: BashSpawnHook | None = None,
 ) -> AgentTool:
     """
     Create a bash tool for the given working directory.
@@ -149,6 +188,7 @@ def create_bash_tool(
         cwd: Working directory for command execution
         operations: Custom operations for command execution (default: local shell)
         command_prefix: Command prefix prepended to every command
+        spawn_hook: Hook to adjust command, cwd, or env before execution
     """
     cwd_str = str(cwd)
     ops = operations or DefaultBashOperations()
@@ -175,7 +215,13 @@ def create_bash_tool(
             timeout = params.get("timeout")
 
             # Apply command prefix if configured
-            resolved_command = f"{command_prefix}\n{command}" if command_prefix else command
+            prefixed_command = f"{command_prefix}\n{command}" if command_prefix else command
+
+            # Apply spawn hook if configured
+            spawn_context = _resolve_spawn_context(prefixed_command, cwd_str, spawn_hook)
+            resolved_command = spawn_context.command
+            resolved_cwd = spawn_context.cwd
+            resolved_env = spawn_context.env
 
             # Track output
             temp_file_path: str | None = None
@@ -229,10 +275,11 @@ def create_bash_tool(
             try:
                 result = await ops.exec(
                     resolved_command,
-                    cwd_str,
+                    resolved_cwd,
                     handle_data,
                     signal,
                     timeout,
+                    resolved_env,
                 )
                 exit_code = result.get("exitCode")
 

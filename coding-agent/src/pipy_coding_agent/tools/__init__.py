@@ -2,7 +2,7 @@
 
 from pipy_agent import AgentTool
 
-from .bash import bash_tool, create_bash_tool, BashOperations, BashToolDetails
+from .bash import bash_tool, create_bash_tool, BashSpawnContext, BashSpawnHook, BashOperations, BashToolDetails
 from .edit import edit_tool, create_edit_tool, EditOperations, EditToolDetails
 from .find import find_tool, create_find_tool, FindOperations, FindToolDetails
 from .grep import grep_tool, create_grep_tool, GrepOperations, GrepToolDetails
@@ -87,6 +87,9 @@ __all__ = [
     "GrepToolDetails",
     "FindToolDetails",
     "LsToolDetails",
+    # Bash spawn hook
+    "BashSpawnContext",
+    "BashSpawnHook",
     # Truncation utilities
     "DEFAULT_MAX_BYTES",
     "DEFAULT_MAX_LINES",

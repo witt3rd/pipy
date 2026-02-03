@@ -204,6 +204,24 @@ class TestSettingsManagerGettersSetters:
         assert retry.enabled
         assert retry.max_retries == 3
         assert retry.base_delay_ms == 2000
+        assert retry.max_delay_ms == 60000
+
+    def test_get_terminal_settings(self):
+        """Test getting terminal settings."""
+        manager = SettingsManager.in_memory()
+
+        terminal = manager.get_terminal_settings()
+
+        assert terminal.show_images
+        assert not terminal.clear_on_shrink
+
+    def test_get_ui_settings(self):
+        """Test getting UI settings."""
+        manager = SettingsManager.in_memory()
+
+        assert manager.settings.double_escape_action == "tree"
+        assert manager.settings.autocomplete_max_visible == 5
+        assert manager.settings.editor_padding_x == 0
 
     def test_apply_overrides(self):
         """Test applying overrides."""

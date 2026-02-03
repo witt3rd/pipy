@@ -11,6 +11,7 @@ from .types import (
     ImageSettings,
     RetrySettings,
     Settings,
+    TerminalSettings,
     ThinkingBudgets,
 )
 
@@ -54,6 +55,8 @@ def dict_to_settings(data: dict) -> Settings:
         data["retry"] = RetrySettings(**data["retry"])
     if "images" in data and isinstance(data["images"], dict):
         data["images"] = ImageSettings(**data["images"])
+    if "terminal" in data and isinstance(data["terminal"], dict):
+        data["terminal"] = TerminalSettings(**data["terminal"])
     if "thinking_budgets" in data and isinstance(data["thinking_budgets"], dict):
         data["thinking_budgets"] = ThinkingBudgets(**data["thinking_budgets"])
 
@@ -126,6 +129,23 @@ def migrate_settings(data: dict) -> dict:
             images["auto_resize"] = images.pop("autoResize")
         if "blockImages" in images:
             images["block_images"] = images.pop("blockImages")
+
+    if "terminal" in data and isinstance(data["terminal"], dict):
+        terminal = data["terminal"]
+        if "showImages" in terminal:
+            terminal["show_images"] = terminal.pop("showImages")
+        if "clearOnShrink" in terminal:
+            terminal["clear_on_shrink"] = terminal.pop("clearOnShrink")
+
+    # UI settings
+    if "doubleEscapeAction" in data:
+        data["double_escape_action"] = data.pop("doubleEscapeAction")
+    if "autocompleteMaxVisible" in data:
+        data["autocomplete_max_visible"] = data.pop("autocompleteMaxVisible")
+    if "editorPaddingX" in data:
+        data["editor_padding_x"] = data.pop("editorPaddingX")
+    if "showHardwareCursor" in data:
+        data["show_hardware_cursor"] = data.pop("showHardwareCursor")
 
     return data
 
@@ -290,6 +310,9 @@ class SettingsManager:
 
     def get_image_settings(self) -> ImageSettings:
         return self._settings.images
+
+    def get_terminal_settings(self) -> TerminalSettings:
+        return self._settings.terminal
 
     def get_thinking_budgets(self) -> ThinkingBudgets:
         return self._settings.thinking_budgets

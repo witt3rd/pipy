@@ -39,9 +39,14 @@ def _file_exists(file_path: str) -> bool:
     return os.path.exists(file_path)
 
 
+def _normalize_at_prefix(file_path: str) -> str:
+    """Strip leading @ from path (used in @-prefixed tool paths)."""
+    return file_path[1:] if file_path.startswith("@") else file_path
+
+
 def expand_path(file_path: str) -> str:
-    """Expand ~ to home directory and normalize unicode spaces."""
-    normalized = _normalize_unicode_spaces(file_path)
+    """Expand ~ to home directory, strip @-prefix, and normalize unicode spaces."""
+    normalized = _normalize_unicode_spaces(_normalize_at_prefix(file_path))
     if normalized == "~":
         return str(Path.home())
     if normalized.startswith("~/"):

@@ -1,6 +1,6 @@
 """pipy-coding-agent: AI coding assistant."""
 
-__version__ = "0.1.0"
+__version__ = "0.51.2"
 
 from pipy_coding_agent.tools import (
     DEFAULT_MAX_BYTES,
@@ -59,6 +59,28 @@ from pipy_coding_agent.compaction import (
     CompactionPreparation,
 )
 
+from pipy_coding_agent.prompt import (
+    build_system_prompt,
+    BuildSystemPromptOptions,
+)
+
+from pipy_coding_agent.agent import (
+    AgentSession,
+    AgentSessionConfig,
+    PromptOptions,
+    PromptResult,
+    ModelResolver,
+    resolve_model,
+)
+
+from pipy_coding_agent.extensions import (
+    Extension,
+    ExtensionManifest,
+    ExtensionLoader,
+    ExtensionHooks,
+    HookType,
+)
+
 __all__ = [
     # Tools
     "read_tool",
@@ -110,4 +132,20 @@ __all__ = [
     "compact",
     "CompactionResult",
     "CompactionPreparation",
+    # System Prompt
+    "build_system_prompt",
+    "BuildSystemPromptOptions",
+    # Agent
+    "AgentSession",
+    "AgentSessionConfig",
+    "PromptOptions",
+    "PromptResult",
+    "ModelResolver",
+    "resolve_model",
+    # Extensions
+    "Extension",
+    "ExtensionManifest",
+    "ExtensionLoader",
+    "ExtensionHooks",
+    "HookType",
 ]

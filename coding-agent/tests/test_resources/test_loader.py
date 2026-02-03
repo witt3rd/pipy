@@ -208,7 +208,9 @@ Skill content.""")
         prompt = loader.build_system_prompt()
 
         assert "Project instructions" in prompt
-        assert "Skill content" in prompt
+        # Skills are listed by name+description+path, not content
+        assert "**test**:" in prompt
+        assert "Test" in prompt
 
     def test_system_prompt_override(self, temp_dir):
         """Test system prompt override."""

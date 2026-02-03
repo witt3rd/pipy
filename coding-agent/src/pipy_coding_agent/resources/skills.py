@@ -289,13 +289,20 @@ def format_skills_for_prompt(skills: list[Skill]) -> str:
     if not skills:
         return ""
 
-    lines = ["## Available Skills", ""]
+    lines = [
+        "",
+        "The following skills provide specialized instructions for specific tasks.",
+        "Use the read tool to load a skill's file when the task matches its description.",
+        "When a skill file references a relative path, resolve it against the skill directory "
+        "(parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.",
+        "",
+        "<available_skills>",
+    ]
+
     for skill in skills:
-        lines.append(f"### {skill.name}")
-        if skill.description:
-            lines.append(f"*{skill.description}*")
-        lines.append("")
-        lines.append(skill.content)
-        lines.append("")
+        lines.append(f"- **{skill.name}**: {skill.description} (location: {skill.file_path})")
+
+    lines.append("</available_skills>")
+    lines.append("")
 
     return "\n".join(lines)
