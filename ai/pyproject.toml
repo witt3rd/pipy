@@ -1,0 +1,66 @@
+[project]
+name = "pipy-ai"
+version = "0.51.2"
+description = "Streaming LLM library with rich types, models.dev integration, and LiteLLM backend. Python port inspired by Mario Zechner's pi-mono/ai."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "Donald Thompson", email = "donald@witt3rd.com" }
+]
+keywords = ["llm", "ai", "streaming", "litellm", "anthropic", "openai", "gemini", "pi"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "litellm",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5.0",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+]
+
+[project.scripts]
+pipy = "pipy_ai.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/witt3rd/pipy"
+Documentation = "https://github.com/witt3rd/pipy#readme"
+Repository = "https://github.com/witt3rd/pipy"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pipy_ai"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

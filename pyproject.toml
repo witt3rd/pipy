@@ -1,0 +1,32 @@
+[project]
+name = "pipy"
+version = "0.51.2"
+description = "Python ports of pi-mono packages - LLM streaming, agent framework, TUI components, and coding assistant"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Donald Thompson", email = "donald@witt3rd.com" }]
+
+[tool.uv.workspace]
+members = ["ai", "agent", "tui", "coding-agent"]
+
+[tool.uv.sources]
+pipy-ai = { workspace = true }
+pipy-agent = { workspace = true }
+pipy-tui = { workspace = true }
+pipy-coding-agent = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::pydantic.PydanticDeprecatedSince211",
+    "ignore::DeprecationWarning:aiohttp",
+]

@@ -1,0 +1,53 @@
+[project]
+name = "pipy-tui"
+version = "0.1.0"
+description = "Terminal UI components for AI assistants, built on Textual. Python port inspired by Mario Zechner's pi-mono/tui."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Donald Thompson", email = "donald@witt3rd.com" }]
+keywords = ["tui", "terminal", "textual", "editor", "autocomplete", "pipy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Terminals",
+]
+
+dependencies = [
+    "textual>=0.50.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/witt3rd/pipy"
+Repository = "https://github.com/witt3rd/pipy"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pipy_tui"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

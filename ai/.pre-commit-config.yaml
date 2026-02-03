@@ -1,0 +1,36 @@
+repos:
+  - repo: local
+    hooks:
+      # On commit: auto-fix issues
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-commit]
+
+      # On push: check only (no modifications), run tests
+      - id: ruff-check-push
+        name: ruff check (push)
+        entry: uv run ruff check
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: pytest
+        name: pytest
+        entry: uv run pytest tests/ -v --tb=short
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-push]
