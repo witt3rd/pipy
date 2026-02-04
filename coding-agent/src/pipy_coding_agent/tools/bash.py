@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import shutil
 import sys
 import tempfile
 import uuid
@@ -41,6 +42,85 @@ BashSpawnHook = Callable[[BashSpawnContext], BashSpawnContext]
 def _get_temp_file_path() -> str:
     """Generate a unique temp file path for bash output."""
     return os.path.join(tempfile.gettempdir(), f"pipy-bash-{uuid.uuid4().hex[:16]}.log")
+
+
+# Cache for shell config
+_cached_shell_config: tuple[str, list[str]] | None = None
+
+
+def _find_bash_on_path() -> str | None:
+    """Find bash executable on PATH (cross-platform).
+
+    Matches upstream shell.ts findBashOnPath().
+    """
+    if sys.platform == "win32":
+        # Windows: Use 'where' and verify file exists
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["where", "bash.exe"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0 and result.stdout:
+                first_match = result.stdout.strip().split("\n")[0].strip()
+                if first_match and os.path.exists(first_match):
+                    return first_match
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        return None
+
+    # Unix: Use shutil.which (handles Termux and special filesystems)
+    return shutil.which("bash")
+
+
+def _get_shell_config() -> tuple[str, list[str]]:
+    """Get shell configuration for command execution.
+
+    Resolution order:
+    1. On Windows: Git Bash in known locations, then bash on PATH, then cmd.exe
+    2. On Unix: /bin/bash, then bash on PATH, then fallback to sh
+
+    Matches upstream shell.ts getShellConfig().
+    """
+    global _cached_shell_config
+    if _cached_shell_config is not None:
+        return _cached_shell_config
+
+    if sys.platform == "win32":
+        # Windows: try Git Bash first
+        git_bash_paths = [
+            r"C:\Program Files\Git\bin\bash.exe",
+            r"C:\Program Files (x86)\Git\bin\bash.exe",
+        ]
+        for path in git_bash_paths:
+            if os.path.exists(path):
+                _cached_shell_config = (path, ["-c"])
+                return _cached_shell_config
+
+        # Try bash on PATH (e.g., WSL bash)
+        bash_on_path = _find_bash_on_path()
+        if bash_on_path:
+            _cached_shell_config = (bash_on_path, ["-c"])
+            return _cached_shell_config
+
+        # Fallback to cmd.exe
+        _cached_shell_config = ("cmd.exe", ["/c"])
+        return _cached_shell_config
+
+    # Unix: try /bin/bash first
+    if os.path.exists("/bin/bash"):
+        _cached_shell_config = ("/bin/bash", ["-c"])
+        return _cached_shell_config
+
+    # Unix: try bash on PATH (handles Termux and other setups)
+    bash_on_path = _find_bash_on_path()
+    if bash_on_path:
+        _cached_shell_config = (bash_on_path, ["-c"])
+        return _cached_shell_config
+
+    # Fallback to sh
+    _cached_shell_config = ("sh", ["-c"])
+    return _cached_shell_config
 
 
 class BashToolDetails:
@@ -88,12 +168,8 @@ class DefaultBashOperations:
             raise RuntimeError(f"Working directory does not exist: {cwd}\nCannot execute bash commands.")
 
         # Determine shell based on platform
-        if sys.platform == "win32":
-            # On Windows, use cmd.exe or PowerShell
-            shell_cmd = ["cmd.exe", "/c", command]
-        else:
-            # On Unix, use bash
-            shell_cmd = ["/bin/bash", "-c", command]
+        shell, args = _get_shell_config()
+        shell_cmd = [shell, *args, command]
 
         # Use provided env or default to current environment
         exec_env = env if env is not None else dict(os.environ)

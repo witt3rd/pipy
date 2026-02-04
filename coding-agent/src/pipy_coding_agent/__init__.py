@@ -1,6 +1,6 @@
 """pipy-coding-agent: AI coding assistant."""
 
-__version__ = "0.51.2"
+__version__ = "0.51.6"
 
 from pipy_coding_agent.tools import (
     DEFAULT_MAX_BYTES,
@@ -81,6 +81,20 @@ from pipy_coding_agent.extensions import (
     HookType,
 )
 
+from pipy_coding_agent.slash_commands import (
+    BUILTIN_SLASH_COMMANDS,
+    BuiltinSlashCommand,
+    SlashCommandInfo,
+    SlashCommandLocation,
+    SlashCommandSource,
+)
+
+from pipy_coding_agent.settings.resolve_config_value import (
+    resolve_config_value,
+    resolve_headers,
+    clear_config_value_cache,
+)
+
 __all__ = [
     # Tools
     "read_tool",
@@ -148,4 +162,14 @@ __all__ = [
     "ExtensionLoader",
     "ExtensionHooks",
     "HookType",
+    # Slash Commands
+    "BUILTIN_SLASH_COMMANDS",
+    "BuiltinSlashCommand",
+    "SlashCommandInfo",
+    "SlashCommandLocation",
+    "SlashCommandSource",
+    # Config Value Resolution
+    "resolve_config_value",
+    "resolve_headers",
+    "clear_config_value_cache",
 ]

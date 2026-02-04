@@ -113,10 +113,8 @@ class TestBashSpawnHook:
         
         tool = create_bash_tool(temp_dir, spawn_hook=hook)
         
-        if sys.platform == "win32":
-            result = await tool.execute("call_1", {"command": "echo %MY_TEST_VAR%"})
-        else:
-            result = await tool.execute("call_1", {"command": "echo $MY_TEST_VAR"})
+        # Use bash syntax - our shell detection now prefers bash on all platforms
+        result = await tool.execute("call_1", {"command": "echo $MY_TEST_VAR"})
         
         assert "hook_value" in result.content[0].text
 

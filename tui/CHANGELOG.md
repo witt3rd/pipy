@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.51.6] - 2026-02-04
+
+**Upstream sync:** [pi-tui v0.51.6](https://github.com/badlogic/pi-mono/releases/tag/v0.51.6)  
+**Upstream commit:** `9cf5758b`
+
+### Not Applicable (vs upstream v0.51.3–v0.51.6)
+
+- v0.51.4: Emoji surrogate pair scrolling fix → Textual handles Unicode rendering
+- v0.51.6: Slash command menu on first line → Our `SlashCommandProvider` already allows this (no multi-line restriction)
+- v0.51.6: Settings list narrow terminal crash fix → No settings list component yet
+
+_No code changes - version bump only._
+
+---
+
 ## [0.51.2] - 2026-02-02
 
 **Upstream sync:** [pi-tui v0.51.2](https://github.com/badlogic/pi-mono/releases/tag/v0.51.2)  

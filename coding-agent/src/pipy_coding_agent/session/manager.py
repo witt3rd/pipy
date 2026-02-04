@@ -306,6 +306,8 @@ class SessionManager:
             for e in self._file_entries
         )
         if not has_assistant:
+            # Mark as not flushed so when assistant arrives, all entries get written
+            self._flushed = False
             return
 
         if not self._flushed:

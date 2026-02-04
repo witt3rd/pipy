@@ -20,7 +20,6 @@ from .prompts import (
     substitute_args,
 )
 from .skills import (
-    ALLOWED_FRONTMATTER_FIELDS,
     LoadSkillsResult,
     Skill,
     SkillDiagnostic,
@@ -48,7 +47,7 @@ __all__ = [
     "load_skill_from_file",
     "format_skills_for_prompt",
     "parse_frontmatter",
-    "ALLOWED_FRONTMATTER_FIELDS",
+
     # Prompts
     "PromptTemplate",
     "PromptDiagnostic",

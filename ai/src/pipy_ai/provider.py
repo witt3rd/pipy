@@ -40,6 +40,15 @@ from .types import (
 logger = logging.getLogger(__name__)
 
 
+def supports_xhigh(model: str) -> bool:
+    """Check if a model supports xhigh thinking level.
+
+    Currently only certain OpenAI models (gpt-5.2 variants) support this.
+    Matches upstream: model.id.includes("gpt-5.2")
+    """
+    return "gpt-5.2" in model
+
+
 class LiteLLMProvider:
     """LiteLLM-backed provider with sync-first API."""
 
@@ -158,10 +167,10 @@ class LiteLLMProvider:
             level = options.reasoning
             if level != ThinkingLevel.OFF:
                 # LiteLLM passes reasoning_effort to OpenAI models
-                # Maps: low, medium, high (xhigh -> high for non-OpenAI)
+                # Maps: low, medium, high (xhigh -> high unless model supports it)
                 effort = level.value
-                if effort == "xhigh":
-                    effort = "high"  # xhigh only supported by some OpenAI models
+                if effort == "xhigh" and not supports_xhigh(model):
+                    effort = "high"  # xhigh only supported by gpt-5.2 models
                 elif effort == "minimal":
                     effort = "low"  # minimal -> low for broader compatibility
                 kwargs["reasoning_effort"] = effort

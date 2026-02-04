@@ -1158,7 +1158,7 @@ source = { virtual = "." }
 
 [[package]]
 name = "pipy-agent"
-version = "0.51.2"
+version = "0.51.6"
 source = { editable = "agent" }
 dependencies = [
     { name = "pipy-ai" },
@@ -1182,7 +1182,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pipy-ai"
-version = "0.51.2"
+version = "0.51.6"
 source = { editable = "ai" }
 dependencies = [
     { name = "httpx" },
@@ -1216,7 +1216,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pipy-coding-agent"
-version = "0.51.2"
+version = "0.51.6"
 source = { editable = "coding-agent" }
 dependencies = [
     { name = "aiofiles" },
@@ -1252,7 +1252,7 @@ provides-extras = ["dev", "tui"]
 
 [[package]]
 name = "pipy-tui"
-version = "0.51.2"
+version = "0.51.6"
 source = { editable = "tui" }
 dependencies = [
     { name = "rich" },

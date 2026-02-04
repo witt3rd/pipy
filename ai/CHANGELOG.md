@@ -2,6 +2,30 @@
 
 This changelog tracks pipy-ai releases and their alignment with the upstream [@mariozechner/pi-ai](https://github.com/badlogic/pi-mono/tree/main/packages/ai) TypeScript package.
 
+## [0.51.6] - 2026-02-04
+
+**Upstream sync:** [pi-ai v0.51.6](https://github.com/badlogic/pi-mono/releases/tag/v0.51.6)  
+**Upstream commit:** `9cf5758b`
+
+### Added
+
+- Added `supports_xhigh()` function to check if a model supports xhigh thinking level
+- xhigh thinking level now passed through (not downgraded to high) for gpt-5.2 models
+
+### Changed
+
+- `supportsXhigh` check changed from hardcoded model set to `"gpt-5.2" in model_id` (matches upstream)
+
+### Not Applicable (vs upstream v0.51.3–v0.51.6)
+
+- v0.51.3: xhigh model set fix → applied as `supports_xhigh()` function
+- v0.51.4: No ai changes
+- v0.51.5: Bedrock model generation changes → N/A (we use LiteLLM)
+- v0.51.6: OpenAI Codex Responses baseUrl fix → N/A (LiteLLM handles provider URLs)
+- `models.generated.ts` regeneration → N/A (we use LiteLLM's model registry)
+
+---
+
 ## [0.51.2] - 2026-02-02
 
 **Upstream sync:** [pi-ai v0.51.2](https://github.com/badlogic/pi-mono/releases/tag/v0.51.2)  

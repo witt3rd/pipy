@@ -25,7 +25,7 @@ Quick start:
     # Async variants available: acomplete(), astream()
 """
 
-__version__ = "0.1.0"
+__version__ = "0.51.6"
 
 # Types (Pydantic models)
 # Abort (cancellation)
@@ -54,6 +54,7 @@ from .api import (
 )
 
 # Registry (models.dev)
+from .provider import supports_xhigh
 from .registry import (
     Model,
     ModelCapabilities,
@@ -201,4 +202,5 @@ __all__ = [
     "AbortError",
     # Utilities
     "get_available_models",
+    "supports_xhigh",
 ]

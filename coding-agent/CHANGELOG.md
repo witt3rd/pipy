@@ -2,6 +2,41 @@
 
 This changelog tracks pipy-coding-agent releases and their alignment with the upstream [@mariozechner/pi-coding-agent](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent) TypeScript package.
 
+## [0.51.6] - 2026-02-04
+
+**Upstream sync:** [pi-coding-agent v0.51.6](https://github.com/badlogic/pi-mono/releases/tag/v0.51.6)  
+**Upstream commit:** `9cf5758b`
+
+### Added
+
+- Added `resolve_config_value` module for shell command (`!command`) and env var resolution in config values (matches upstream `resolve-config-value.ts`)
+- Added `slash_commands.py` with centralized `BUILTIN_SLASH_COMMANDS` definitions and `SlashCommandInfo` types
+- Added `SettingsManager.reload()` method to re-read settings from files
+- Added cross-platform bash detection: Unix now falls back to PATH lookup when `/bin/bash` unavailable (Termux support)
+- Added Windows Git Bash detection in known installation paths
+
+### Changed
+
+- Removed `ALLOWED_FRONTMATTER_FIELDS` validation from skills loader — unknown frontmatter fields are now silently ignored (matches upstream)
+
+### Fixed
+
+- Fixed session persistence: mark `_flushed = False` when no assistant message exists yet, so all entries are written when assistant message arrives (matches upstream fork fix)
+
+### Not Applicable (vs upstream v0.51.3–v0.51.6)
+
+- v0.51.3: Command discovery `ExtensionAPI.getCommands()` → noted for future extension API work
+- v0.51.3: Local path support for `pi install`/`pi remove` → package management not yet ported
+- v0.51.3: RPC `SlashCommandSource` rename "template" → "prompt" → no RPC mode yet
+- v0.51.4: Share URLs default to pi.dev → no share feature yet
+- v0.51.5: Windows `.cmd` resolution for package installs → package management not yet ported
+- v0.51.6: `resume` keybinding action → handled through Textual keybindings
+- v0.51.6: Forked sessions write to new session files → branching not fully ported
+- v0.51.6: `/reload` picks up global settings.json changes → `reload()` method added
+- v0.51.6: Auth storage `resolveConfigValue` for `!command` API keys → utility module added (wiring to auth pending)
+
+---
+
 ## [0.51.2] - 2026-02-02
 
 **Upstream sync:** [pi-coding-agent v0.51.2](https://github.com/badlogic/pi-mono/releases/tag/v0.51.2)  

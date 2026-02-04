@@ -382,6 +382,19 @@ class SettingsManager:
         self._save()
 
     # =========================================================================
+    # Reload
+    # =========================================================================
+
+    def reload(self) -> None:
+        """Reload settings from files, clearing any in-memory modifications.
+
+        Re-reads global and project settings files and re-merges them.
+        Any unsaved modifications are discarded.
+        """
+        self._modified_fields.clear()
+        self._load()
+
+    # =========================================================================
     # Raw access
     # =========================================================================
 

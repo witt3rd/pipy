@@ -1,12 +1,34 @@
 """Tests for provider module."""
 
-from pipy_ai.provider import LiteLLMProvider
+from pipy_ai.provider import LiteLLMProvider, supports_xhigh
 from pipy_ai.types import (
     SimpleStreamOptions,
     StreamOptions,
     ThinkingBudgets,
     ThinkingLevel,
 )
+
+
+class TestSupportsXhigh:
+    """Test supports_xhigh function."""
+
+    def test_gpt52_supported(self):
+        assert supports_xhigh("openai/gpt-5.2") is True
+
+    def test_gpt52_codex_supported(self):
+        assert supports_xhigh("openai/gpt-5.2-codex") is True
+
+    def test_gpt52_variant_supported(self):
+        assert supports_xhigh("gpt-5.2-turbo") is True
+
+    def test_gpt4_not_supported(self):
+        assert supports_xhigh("openai/gpt-4") is False
+
+    def test_gpt51_not_supported(self):
+        assert supports_xhigh("openai/gpt-5.1-codex-max") is False
+
+    def test_claude_not_supported(self):
+        assert supports_xhigh("anthropic/claude-sonnet-4-20250514") is False
 
 
 class TestBuildKwargs:
@@ -90,10 +112,20 @@ class TestReasoningKwargs:
         kwargs = self.provider._build_kwargs("gpt-4", self.messages, options)
         assert kwargs["reasoning_effort"] == "high"
 
-    def test_reasoning_xhigh_maps_to_high(self):
+    def test_reasoning_xhigh_maps_to_high_for_non_gpt52(self):
         options = SimpleStreamOptions(reasoning=ThinkingLevel.XHIGH)
         kwargs = self.provider._build_kwargs("gpt-4", self.messages, options)
         assert kwargs["reasoning_effort"] == "high"
+
+    def test_reasoning_xhigh_passed_through_for_gpt52(self):
+        options = SimpleStreamOptions(reasoning=ThinkingLevel.XHIGH)
+        kwargs = self.provider._build_kwargs("openai/gpt-5.2", self.messages, options)
+        assert kwargs["reasoning_effort"] == "xhigh"
+
+    def test_reasoning_xhigh_passed_through_for_gpt52_codex(self):
+        options = SimpleStreamOptions(reasoning=ThinkingLevel.XHIGH)
+        kwargs = self.provider._build_kwargs("openai/gpt-5.2-codex", self.messages, options)
+        assert kwargs["reasoning_effort"] == "xhigh"
 
     def test_reasoning_minimal_maps_to_low(self):
         options = SimpleStreamOptions(reasoning=ThinkingLevel.MINIMAL)

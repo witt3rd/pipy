@@ -13,7 +13,7 @@ Example:
     await agent.prompt("Greet Alice")
 """
 
-__version__ = "0.51.2"
+__version__ = "0.51.6"
 
 # Re-export pipy-ai types that agent users need
 from pipy_ai import (

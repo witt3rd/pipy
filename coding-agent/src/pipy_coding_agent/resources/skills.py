@@ -12,17 +12,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-# Frontmatter fields allowed per Agent Skills spec
-ALLOWED_FRONTMATTER_FIELDS = {
-    "name",
-    "description",
-    "license",
-    "compatibility",
-    "metadata",
-    "allowed-tools",
-    "disable-model-invocation",
-}
-
 MAX_NAME_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 1024
 

@@ -16,7 +16,7 @@ Example:
     )
 """
 
-__version__ = "0.51.2"
+__version__ = "0.51.6"
 
 # Editor widget
 from .editor import PiEditor

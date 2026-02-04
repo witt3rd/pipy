@@ -2,6 +2,17 @@
 
 This changelog tracks pipy-agent releases and their alignment with the upstream [@mariozechner/pi-agent](https://github.com/badlogic/pi-mono/tree/main/packages/agent) TypeScript package.
 
+## [0.51.6] - 2026-02-04
+
+**Upstream sync:** [pi-agent v0.51.6](https://github.com/badlogic/pi-mono/releases/tag/v0.51.6)  
+**Upstream commit:** `9cf5758b`
+
+_No source changes in upstream agent package (v0.51.3–v0.51.6) - version bump only._
+
+Updated pipy-ai dependency to >=0.51.6.
+
+---
+
 ## [0.51.2] - 2026-02-02
 
 **Upstream sync:** [pi-agent v0.51.2](https://github.com/badlogic/pi-mono/releases/tag/v0.51.2)  
