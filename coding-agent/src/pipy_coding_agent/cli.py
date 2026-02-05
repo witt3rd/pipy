@@ -461,9 +461,8 @@ def cmd_resume(session: AgentSession, args: str) -> bool:
 
 
 @slash_command("login", "Login with API key or OAuth")
-def cmd_login(session: AgentSession, args: str) -> bool:
+async def cmd_login(session: AgentSession, args: str) -> bool:
     """Handle login — OAuth or API key."""
-    import asyncio
     from pipy_ai.oauth import get_oauth_providers
     from .auth_storage import AuthStorage
 
@@ -534,17 +533,19 @@ def cmd_login(session: AgentSession, args: str) -> bool:
             print("  (Could not open browser — please open the URL manually)")
 
     async def on_prompt(prompt):
-        return input(f"{prompt.message} ").strip()
+        # Use loop.run_in_executor for blocking input() inside async context
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, lambda: input(f"{prompt.message} ").strip())
 
     def on_progress(msg):
         print(f"  {msg}")
 
     try:
-        credentials = asyncio.run(provider.login(
+        credentials = await provider.login(
             on_auth=on_auth,
             on_prompt=on_prompt,
             on_progress=on_progress,
-        ))
+        )
         auth.set_oauth(provider.id, credentials)
         print(f"\n✓ Logged in to {provider.name}")
     except KeyboardInterrupt:
@@ -607,7 +608,7 @@ def cmd_exit(session: AgentSession, args: str) -> bool:
     return False
 
 
-def handle_slash_command(session: AgentSession, input_text: str) -> bool | None:
+async def handle_slash_command(session: AgentSession, input_text: str) -> bool | None:
     """
     Handle a slash command.
     
@@ -624,7 +625,11 @@ def handle_slash_command(session: AgentSession, input_text: str) -> bool | None:
     cmd_args = parts[1] if len(parts) > 1 else ""
     
     if cmd_name in SLASH_COMMANDS:
-        return SLASH_COMMANDS[cmd_name]["func"](session, cmd_args)
+        result = SLASH_COMMANDS[cmd_name]["func"](session, cmd_args)
+        # Support async command handlers (e.g., /login)
+        if asyncio.iscoroutine(result):
+            result = await result
+        return result
     
     print(f"Unknown command: /{cmd_name}. Type /help for available commands.")
     return True
@@ -655,7 +660,7 @@ async def run_interactive_async(session: AgentSession, verbose: bool = False) ->
             continue
 
         # Handle slash commands
-        cmd_result = handle_slash_command(session, user_input)
+        cmd_result = await handle_slash_command(session, user_input)
         if cmd_result is False:
             print("Goodbye!")
             break
