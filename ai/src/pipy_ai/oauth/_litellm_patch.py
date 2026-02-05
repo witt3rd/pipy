@@ -49,6 +49,7 @@ def patch_litellm_anthropic_oauth() -> None:
             headers["anthropic-beta"] = ",".join(beta_parts)
             headers["anthropic-dangerous-direct-browser-access"] = "true"
             headers["x-app"] = "cli"  # Identifies as CLI application
+            headers["user-agent"] = "claude-cli/2.1.2 (external, cli)"  # Required user-agent
         return headers
 
     AnthropicConfig.get_anthropic_headers = _patched_get_anthropic_headers

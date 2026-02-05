@@ -49,6 +49,43 @@ def supports_xhigh(model: str) -> bool:
     return "gpt-5.2" in model
 
 
+# Required identity text for Anthropic OAuth tokens
+CLAUDE_CODE_IDENTITY = "You are Claude Code, Anthropic's official CLI for Claude."
+
+
+def _inject_claude_code_identity(messages: list[dict]) -> list[dict]:
+    """Inject Claude Code identity as a separate system message for Anthropic OAuth.
+
+    Anthropic OAuth tokens (sk-ant-oat*) are scoped to Claude Code and require
+    the system prompt to include the Claude Code identity as a SEPARATE system
+    block. This matches how the upstream pi-mono handles OAuth:
+        system: [
+            { type: "text", text: "You are Claude Code, ..." },
+            { type: "text", text: <actual system prompt> }
+        ]
+
+    LiteLLM converts multiple system role messages into separate system blocks.
+
+    Args:
+        messages: List of message dicts with 'role' and 'content'.
+
+    Returns:
+        New messages list with Claude Code identity as the first system message.
+    """
+    messages = list(messages)  # shallow copy
+
+    # Check if identity already present
+    for msg in messages:
+        if msg.get("role") == "system" and msg.get("content") == CLAUDE_CODE_IDENTITY:
+            return messages  # Already has identity as separate message
+
+    # Insert Claude Code identity as first system message (before any existing system messages)
+    # This ensures it becomes the first block in the system array
+    messages.insert(0, {"role": "system", "content": CLAUDE_CODE_IDENTITY})
+
+    return messages
+
+
 class LiteLLMProvider:
     """LiteLLM-backed provider with sync-first API."""
 
@@ -153,6 +190,9 @@ class LiteLLMProvider:
             kwargs["tools"] = tools
         if options.api_key:
             kwargs["api_key"] = options.api_key
+            # Anthropic OAuth tokens require Claude Code identity in system prompt
+            if options.api_key.startswith("sk-ant-oat") and "anthropic" in model.lower():
+                kwargs["messages"] = _inject_claude_code_identity(messages)
         if options.headers:
             kwargs["extra_headers"] = options.headers
         # session_id can be passed via headers for providers that support cache affinity

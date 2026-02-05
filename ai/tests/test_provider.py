@@ -91,6 +91,28 @@ class TestBuildKwargs:
         kwargs = self.provider._build_kwargs("anthropic/claude-sonnet-4-5", self.messages, options)
         assert kwargs["api_key"] == oauth_token
 
+    def test_anthropic_oauth_token_injects_identity(self):
+        """OAuth tokens trigger Claude Code identity injection as separate system message."""
+        oauth_token = "sk-ant-oat01-abc123"
+        messages = [{"role": "system", "content": "Be helpful"}, {"role": "user", "content": "hi"}]
+        options = StreamOptions(api_key=oauth_token)
+        kwargs = self.provider._build_kwargs("anthropic/claude-sonnet-4-5", messages, options)
+        # Should have TWO system messages - identity first, then original
+        from pipy_ai.provider import CLAUDE_CODE_IDENTITY
+        assert kwargs["messages"][0]["role"] == "system"
+        assert kwargs["messages"][0]["content"] == CLAUDE_CODE_IDENTITY
+        assert kwargs["messages"][1]["role"] == "system"
+        assert kwargs["messages"][1]["content"] == "Be helpful"
+
+    def test_regular_api_key_no_identity_injection(self):
+        """Regular API keys don't get Claude Code identity injected."""
+        options = StreamOptions(api_key="sk-ant-api03-regular")
+        messages = [{"role": "system", "content": "Be helpful"}, {"role": "user", "content": "hi"}]
+        kwargs = self.provider._build_kwargs("anthropic/claude-sonnet-4-5", messages, options)
+        # Should NOT have identity injected
+        assert len([m for m in kwargs["messages"] if m["role"] == "system"]) == 1
+        assert kwargs["messages"][0]["content"] == "Be helpful"
+
 
 class TestReasoningKwargs:
     """Test reasoning/thinking level handling."""
