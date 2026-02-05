@@ -24,6 +24,10 @@ from .registry import (
     register_oauth_provider,
     get_oauth_api_key,
 )
+from ._litellm_patch import patch_litellm_anthropic_oauth
+
+# Apply litellm patch for Anthropic OAuth support on import
+patch_litellm_anthropic_oauth()
 
 __all__ = [
     # Types

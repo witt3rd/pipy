@@ -84,37 +84,12 @@ class TestBuildKwargs:
             "x-session-id": "sess-123",
         }
 
-    def test_anthropic_oauth_token_uses_bearer_header(self):
-        """Anthropic OAuth tokens (sk-ant-oat*) must be sent via Authorization header."""
+    def test_anthropic_oauth_token_passed_as_api_key(self):
+        """OAuth tokens are passed as api_key; litellm patch handles Bearer routing."""
         oauth_token = "sk-ant-oat01-abc123"
         options = StreamOptions(api_key=oauth_token)
         kwargs = self.provider._build_kwargs("anthropic/claude-sonnet-4-5", self.messages, options)
-        # api_key still set for litellm validation
         assert kwargs["api_key"] == oauth_token
-        # Authorization header set for litellm's OAuth detection
-        assert kwargs["extra_headers"]["authorization"] == f"Bearer {oauth_token}"
-
-    def test_anthropic_oauth_token_preserves_existing_headers(self):
-        """OAuth token handling merges with existing headers."""
-        oauth_token = "sk-ant-oat01-abc123"
-        options = StreamOptions(api_key=oauth_token, headers={"X-Custom": "value"})
-        kwargs = self.provider._build_kwargs("anthropic/claude-sonnet-4-5", self.messages, options)
-        assert kwargs["extra_headers"]["authorization"] == f"Bearer {oauth_token}"
-        assert kwargs["extra_headers"]["X-Custom"] == "value"
-
-    def test_regular_anthropic_key_no_bearer(self):
-        """Regular API keys should NOT get Bearer header treatment."""
-        options = StreamOptions(api_key="sk-ant-api03-regular-key")
-        kwargs = self.provider._build_kwargs("anthropic/claude-sonnet-4-5", self.messages, options)
-        assert kwargs["api_key"] == "sk-ant-api03-regular-key"
-        assert "extra_headers" not in kwargs
-
-    def test_openai_key_no_bearer(self):
-        """Non-Anthropic keys should NOT get Bearer header treatment."""
-        options = StreamOptions(api_key="sk-openai-key")
-        kwargs = self.provider._build_kwargs("openai/gpt-4", self.messages, options)
-        assert kwargs["api_key"] == "sk-openai-key"
-        assert "extra_headers" not in kwargs
 
 
 class TestReasoningKwargs:
