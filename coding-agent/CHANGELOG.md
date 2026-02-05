@@ -2,6 +2,27 @@
 
 This changelog tracks pipy-coding-agent releases and their alignment with the upstream [@mariozechner/pi-coding-agent](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent) TypeScript package.
 
+## [0.51.6.1] - 2026-02-04
+
+### Added — Auth Storage & Login Commands
+
+Ported credential storage from `pi-coding-agent/src/core/auth-storage.ts`:
+
+- **AuthStorage** (`auth_storage.py`): `auth.json`-backed credential persistence
+  - API key storage (plain, `!command`, env var via `resolve_config_value`)
+  - OAuth credential storage with auto-refresh on expired tokens
+  - Runtime API key overrides (non-persisted, highest priority)
+  - Priority chain: runtime override → auth.json API key → auth.json OAuth → env var → fallback
+  - Restricted file permissions (owner-only on Unix)
+  - Handles corrupted/missing auth files gracefully
+- **`/login` command**: Interactive OAuth login or direct API key entry
+  - Provider menu with logged-in status indicators
+  - Browser-based OAuth for all 4 providers
+  - Direct API key entry with `api-key` subcommand
+- **`/logout` command**: Remove stored credentials per-provider or all at once
+
+25 new tests for AuthStorage CRUD, resolution priority, env vars, corruption.
+
 ## [0.51.6] - 2026-02-04
 
 **Upstream sync:** [pi-coding-agent v0.51.6](https://github.com/badlogic/pi-mono/releases/tag/v0.51.6)  

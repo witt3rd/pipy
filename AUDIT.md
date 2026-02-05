@@ -10,19 +10,19 @@ This document is an honest assessment of what has been ported from the upstream 
 
 | | Upstream (TypeScript) | Pipy (Python) | Coverage |
 |-|----------------------|---------------|----------|
-| **Total source lines** | 68,901 | 13,654 | **20%** |
-| **Total test lines** | 11,997 | 7,383 | 62% |
-| **Tests passing** | — | 597 | — |
+| **Total source lines** | 68,901 | ~15,500 | **22%** |
+| **Total test lines** | 11,997 | ~8,200 | 68% |
+| **Tests passing** | — | 653 | — |
 | **Packages** | 4 | 4 | ✅ |
 
 ### Per-Package Breakdown
 
 | Package | Upstream Lines | Pipy Lines | Coverage |
 |---------|---------------|------------|----------|
-| pi-ai / pipy-ai | 21,509 | 2,195 | 10%¹ |
+| pi-ai / pipy-ai | 21,509 | 3,300 | 15%¹ |
 | pi-agent / pipy-agent | 1,465 | 1,200 | 82% |
 | pi-tui / pipy-tui | 9,557 | 1,727 | 18%² |
-| pi-coding-agent / pipy-coding-agent | 36,370 | 8,532 | 23% |
+| pi-coding-agent / pipy-coding-agent | 36,370 | 8,800 | 24% |
 
 ¹ pipy-ai uses LiteLLM instead of per-provider implementations, so the low percentage is expected — LiteLLM replaces ~15,000 lines of provider code.  
 ² pipy-tui uses Textual instead of a custom terminal renderer, so the core tui package is smaller, but the Textual framework provides the missing functionality.
@@ -42,11 +42,18 @@ This document is an honest assessment of what has been ported from the upstream 
 - `AbortController`/`AbortSignal` for cancellation — ✅
 - Model registry with models.dev integration — ✅
 - `supports_xhigh()` check — ✅
-- **92 tests passing**
+- **OAuth module** (`pipy_ai.oauth`) — ✅
+  - PKCE utilities — ✅
+  - Provider registry with lazy loading — ✅
+  - Anthropic OAuth (PKCE, code paste) — ✅
+  - OpenAI Codex OAuth (PKCE, local callback server, JWT extraction) — ✅
+  - GitHub Copilot (device code flow, enterprise domains) — ✅
+  - Google Gemini CLI (Google Cloud OAuth, callback server, project discovery) — ✅
+  - Auto-refresh for expired tokens — ✅
+- **123 tests passing** (31 new OAuth tests)
 
 ### Not Applicable
-- Per-provider implementations (Anthropic, OpenAI, Google, Bedrock, etc.) — LiteLLM handles this
-- OAuth/token refresh — LiteLLM uses API keys
+- Per-provider streaming implementations (Anthropic, OpenAI, Google, Bedrock, etc.) — LiteLLM handles this
 - Provider-specific streaming parsers — LiteLLM abstracts this
 - `models.generated.ts` — LiteLLM has its own model catalog
 
@@ -115,7 +122,7 @@ This is where the biggest gap is. The engine (tools, sessions, compaction, setti
 | **Slash Commands** (definitions) | 37 | 60 | Data only — `BUILTIN_SLASH_COMMANDS` |
 | **Config Value Resolution** (`!command`, env vars) | 64 | 70 | Good |
 
-**348 tests passing** across all coding-agent modules.
+**373 tests passing** across all coding-agent modules (25 new auth tests).
 
 ### ⚠️ Partially Ported / Stubbed
 
@@ -143,8 +150,8 @@ This is where the biggest gap is. The engine (tools, sessions, compaction, setti
 | `/fork` | ❌ Stub |
 | `/tree` | ❌ Stub |
 | `/resume` | ❌ Stub (CLI flag `--resume` partially works) |
-| `/login` | ❌ Stub — prints "OAuth not implemented" |
-| `/logout` | ❌ Stub |
+| `/login` | ✅ Works — OAuth for 4 providers + direct API key entry |
+| `/logout` | ✅ Works — per-provider or all-at-once credential removal |
 | `/export` | ❌ Stub |
 | `/share` | ❌ Stub |
 | `/settings` | ❌ Not implemented |
@@ -161,7 +168,7 @@ This is where the biggest gap is. The engine (tools, sessions, compaction, setti
 | ↳ Interactive Mode orchestrator | ~2,000 | Wires everything together — slash command handling, message rendering, tool execution display, autocomplete |
 | ↳ Theme system | ~200 | Theming for the TUI |
 | **RPC Mode** | **1,399** | VS Code / editor integration protocol — allows external editors to drive pi |
-| **Auth Storage** | **331** | `auth.json` management, OAuth flows (Anthropic/Google/OpenAI), API key storage, token refresh |
+| **Auth Storage** | **331** | ✅ **Ported** — `auth.json` management, OAuth flows, API key storage, token refresh, priority chain |
 | **Model Registry** | **544** | `models.json` parsing, custom model definitions, provider-specific config, API key resolution |
 | **Package Manager** | **1,627** | `pi install/remove/update` for extensions — npm, git, local path sources |
 | **Extension Runner** | **~800** | Full extension lifecycle — load, init, command registration, tool wrapping, event emission, `ExtensionAPI` |
@@ -186,11 +193,12 @@ If you run `pipy-coding-agent` today, you get:
 4. **Session persistence** — conversations saved to JSONL, can resume with `--session`
 5. **Print mode** (`-p "prompt"`) — single prompt, output, exit
 6. **Basic slash commands** — `/model`, `/thinking`, `/clear`, `/new`, `/session`
+7. **OAuth login** (`/login`) — Anthropic, OpenAI Codex, GitHub Copilot, Google Gemini CLI
+8. **Auth storage** (`~/.pipy/auth.json`) — API keys and OAuth credentials persisted with auto-refresh
 
 What you **don't** get (that upstream has):
 - No rich TUI (no markdown rendering, no streaming display, no footer)
 - No autocomplete (no `/` commands menu, no `@` file picker)
-- No OAuth login (must set API keys as env vars)
 - No custom models (`models.json` not supported)
 - No extensions
 - No package management
@@ -204,10 +212,10 @@ What you **don't** get (that upstream has):
 
 ## Recommended Priority for Closing the Gap
 
-### Phase 1: Make It Usable (Auth + Models)
-1. **Auth Storage** — `auth.json` with API key persistence, `resolve_config_value` wiring
-2. **Model Registry** — `models.json` support, custom models, provider config
-3. Wire `/login` and `/logout` (API key entry at minimum, OAuth stretch goal)
+### Phase 1: Make It Usable (Auth + Models) — ✅ DONE
+1. ~~**Auth Storage** — `auth.json` with API key persistence, `resolve_config_value` wiring~~ ✅
+2. ~~Wire `/login` and `/logout`~~ ✅ (OAuth + API key entry)
+3. **Model Registry** — `models.json` support, custom models, provider config (nice-to-have)
 
 ### Phase 2: Make It Interactive (TUI)
 4. **Wire pipy-tui into coding-agent** — replace `input()` REPL with Textual app

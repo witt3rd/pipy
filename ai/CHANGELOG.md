@@ -2,6 +2,22 @@
 
 This changelog tracks pipy-ai releases and their alignment with the upstream [@mariozechner/pi-ai](https://github.com/badlogic/pi-mono/tree/main/packages/ai) TypeScript package.
 
+## [0.51.6.1] - 2026-02-04
+
+### Added — OAuth module (`pipy_ai.oauth`)
+
+Ported OAuth credential management from `pi-ai/src/utils/oauth/`:
+
+- **PKCE utilities** (`pkce.py`): `generate_pkce()` — code verifier + SHA-256 challenge
+- **Types** (`types.py`): `OAuthCredentials`, `OAuthPrompt`, `OAuthAuthInfo`, `OAuthLoginCallbacks`, `OAuthProviderInterface`
+- **Provider registry** (`registry.py`): `get_oauth_provider()`, `get_oauth_providers()`, `register_oauth_provider()`, `get_oauth_api_key()` with auto-refresh
+- **Anthropic** (`anthropic.py`): PKCE OAuth flow, manual code paste, token refresh
+- **OpenAI Codex** (`openai_codex.py`): PKCE + local callback server (port 1455), JWT accountId extraction, code paste fallback
+- **GitHub Copilot** (`github_copilot.py`): Device code flow, enterprise domain support, Copilot token exchange
+- **Google Gemini CLI** (`google_gemini.py`): Google Cloud OAuth, local callback server (port 8085), GCP project discovery
+
+31 new tests for PKCE, registry, provider helpers.
+
 ## [0.51.6] - 2026-02-04
 
 **Upstream sync:** [pi-ai v0.51.6](https://github.com/badlogic/pi-mono/releases/tag/v0.51.6)  

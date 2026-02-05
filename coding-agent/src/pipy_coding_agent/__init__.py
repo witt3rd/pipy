@@ -95,6 +95,10 @@ from pipy_coding_agent.settings.resolve_config_value import (
     clear_config_value_cache,
 )
 
+from pipy_coding_agent.auth_storage import (
+    AuthStorage,
+)
+
 __all__ = [
     # Tools
     "read_tool",
@@ -172,4 +176,6 @@ __all__ = [
     "resolve_config_value",
     "resolve_headers",
     "clear_config_value_cache",
+    # Auth
+    "AuthStorage",
 ]

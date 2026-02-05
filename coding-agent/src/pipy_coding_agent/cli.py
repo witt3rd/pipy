@@ -462,20 +462,136 @@ def cmd_resume(session: AgentSession, args: str) -> bool:
 
 @slash_command("login", "Login with API key or OAuth")
 def cmd_login(session: AgentSession, args: str) -> bool:
-    """Handle login."""
-    print("\nAPI keys are read from environment variables:")
-    print("  ANTHROPIC_API_KEY - for Claude models")
-    print("  OPENAI_API_KEY    - for GPT models")
-    print("  GOOGLE_API_KEY    - for Gemini models")
-    print("\nSet the appropriate variable and restart.")
-    print("\n(OAuth login not implemented - pipy uses LiteLLM which reads env vars)")
+    """Handle login — OAuth or API key."""
+    import asyncio
+    from pipy_ai.oauth import get_oauth_providers
+    from .auth_storage import AuthStorage
+
+    auth = AuthStorage()
+    providers = get_oauth_providers()
+
+    # If a specific provider was given, use it
+    target = args.strip().lower() if args.strip() else None
+
+    if target == "api-key" or target == "apikey":
+        # Direct API key entry
+        provider_name = input("Provider (e.g., anthropic, openai, google): ").strip()
+        if not provider_name:
+            print("Cancelled.")
+            return True
+        api_key = input(f"API key for {provider_name}: ").strip()
+        if not api_key:
+            print("Cancelled.")
+            return True
+        auth.set_api_key(provider_name, api_key)
+        print(f"✓ API key saved for {provider_name}")
+        return True
+
+    # Show provider menu
+    print("\nAvailable login methods:\n")
+    print("  api-key          Enter an API key directly")
+    for p in providers:
+        marker = " ✓" if auth.get(p.id) else ""
+        print(f"  {p.id:<20} {p.name}{marker}")
+    print()
+
+    if not target:
+        target = input("Choose provider (or 'api-key'): ").strip().lower()
+
+    if not target:
+        print("Cancelled.")
+        return True
+
+    if target in ("api-key", "apikey"):
+        provider_name = input("Provider (e.g., anthropic, openai, google): ").strip()
+        if not provider_name:
+            print("Cancelled.")
+            return True
+        api_key = input(f"API key for {provider_name}: ").strip()
+        if not api_key:
+            print("Cancelled.")
+            return True
+        auth.set_api_key(provider_name, api_key)
+        print(f"✓ API key saved for {provider_name}")
+        return True
+
+    # Find OAuth provider
+    provider = next((p for p in providers if p.id == target), None)
+    if not provider:
+        print(f"Unknown provider: {target}")
+        return True
+
+    # Run OAuth flow
+    import webbrowser
+
+    def on_auth(info):
+        print(f"\nOpening browser: {info.url}")
+        if info.instructions:
+            print(f"  {info.instructions}")
+        try:
+            webbrowser.open(info.url)
+        except Exception:
+            print("  (Could not open browser — please open the URL manually)")
+
+    async def on_prompt(prompt):
+        return input(f"{prompt.message} ").strip()
+
+    def on_progress(msg):
+        print(f"  {msg}")
+
+    try:
+        credentials = asyncio.run(provider.login(
+            on_auth=on_auth,
+            on_prompt=on_prompt,
+            on_progress=on_progress,
+        ))
+        auth.set_oauth(provider.id, credentials)
+        print(f"\n✓ Logged in to {provider.name}")
+    except KeyboardInterrupt:
+        print("\nCancelled.")
+    except Exception as e:
+        print(f"\n✗ Login failed: {e}")
+
     return True
 
 
 @slash_command("logout", "Logout (clear cached credentials)")
 def cmd_logout(session: AgentSession, args: str) -> bool:
-    """Handle logout."""
-    print("Logout not applicable - credentials are in environment variables.")
+    """Handle logout — remove stored credentials."""
+    from .auth_storage import AuthStorage
+
+    auth = AuthStorage()
+    stored = auth.get_providers_with_credentials()
+
+    if not stored:
+        print("No stored credentials.")
+        return True
+
+    target = args.strip().lower() if args.strip() else None
+
+    if not target:
+        print("\nStored credentials:")
+        for p in stored:
+            cred = auth.get(p)
+            ctype = cred.get("type", "unknown") if cred else "unknown"
+            print(f"  {p:<20} ({ctype})")
+        print()
+        target = input("Provider to logout (or 'all'): ").strip().lower()
+
+    if not target:
+        print("Cancelled.")
+        return True
+
+    if target == "all":
+        for p in stored:
+            auth.remove(p)
+        print(f"✓ Removed credentials for {len(stored)} provider(s)")
+    elif target in stored:
+        auth.remove(target)
+        print(f"✓ Removed credentials for {target}")
+    else:
+        print(f"No credentials found for: {target}")
+
     return True
 
 
