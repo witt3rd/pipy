@@ -38,6 +38,7 @@ from ..compaction import (
     CompactionResult,
 )
 from ..tools import create_coding_tools
+from ..auth_storage import AuthStorage
 from .model_resolver import ModelResolver, ResolvedModel, resolve_model
 
 
@@ -142,6 +143,7 @@ class AgentSession:
         self._settings = SettingsManager(cwd=self._cwd)
         self._session = SessionManager(cwd=self._cwd) if self._config.persist_session else None
         self._resources = DefaultResourceLoader(cwd=self._cwd)
+        self._auth = AuthStorage()
 
         # Build tools
         self._tools = self._config.tools or create_coding_tools(cwd=str(self._cwd))
@@ -149,11 +151,12 @@ class AgentSession:
         # Build system prompt
         self._system_prompt = self._build_system_prompt()
 
-        # Create agent
+        # Create agent with auth-aware API key resolution
         self._agent = Agent(
             model=self._resolved_model.model_id,
             system_prompt=self._system_prompt,
             tools=self._tools,
+            get_api_key=self._resolve_api_key,
         )
 
         # Event listeners
@@ -162,6 +165,14 @@ class AgentSession:
         # State
         self._thinking_level = self._config.thinking_level
         self._turn_count = 0
+
+    async def _resolve_api_key(self, provider: str) -> str | None:
+        """Resolve API key from auth storage.
+
+        Called by the agent loop before each LLM call. Checks auth.json
+        for stored API keys or OAuth tokens (with auto-refresh).
+        """
+        return await self._auth.get_api_key(provider)
 
     def _build_system_prompt(self) -> str:
         """Build system prompt from resources and config."""
