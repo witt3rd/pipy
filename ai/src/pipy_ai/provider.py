@@ -152,8 +152,19 @@ class LiteLLMProvider:
         if tools:
             kwargs["tools"] = tools
         if options.api_key:
-            kwargs["api_key"] = options.api_key
-        if options.headers:
+            if options.api_key.startswith("sk-ant-oat"):
+                # Anthropic OAuth token — must be passed via Authorization header.
+                # LiteLLM's validate_environment detects "Bearer sk-ant-oat..." and
+                # sets the required OAuth beta headers automatically.
+                kwargs["extra_headers"] = {
+                    **(options.headers or {}),
+                    "authorization": f"Bearer {options.api_key}",
+                }
+                # api_key still needed so litellm doesn't reject for missing key
+                kwargs["api_key"] = options.api_key
+            else:
+                kwargs["api_key"] = options.api_key
+        if options.headers and "extra_headers" not in kwargs:
             kwargs["extra_headers"] = options.headers
         # session_id can be passed via headers for providers that support cache affinity
         # e.g., headers={"x-session-id": session_id} or provider-specific header names
