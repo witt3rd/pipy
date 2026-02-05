@@ -38,13 +38,17 @@ def patch_litellm_anthropic_oauth() -> None:
         if isinstance(api_key, str) and api_key.startswith("sk-ant-oat"):
             headers.pop("x-api-key", None)
             headers["authorization"] = f"Bearer {api_key}"
-            # Add required OAuth beta headers (in case they weren't set upstream)
+            # Add required Claude Code / OAuth headers to identify as the CLI
             existing_beta = headers.get("anthropic-beta", "")
-            if "oauth-" not in existing_beta:
-                beta_parts = [b for b in existing_beta.split(",") if b.strip()]
+            beta_parts = [b.strip() for b in existing_beta.split(",") if b.strip()]
+            # claude-code-20250219 identifies us as Claude Code CLI (required for OAuth tokens)
+            if "claude-code-20250219" not in beta_parts:
+                beta_parts.insert(0, "claude-code-20250219")
+            if "oauth-2025-04-20" not in beta_parts:
                 beta_parts.append("oauth-2025-04-20")
-                headers["anthropic-beta"] = ",".join(beta_parts)
-            headers.setdefault("anthropic-dangerous-direct-browser-access", "true")
+            headers["anthropic-beta"] = ",".join(beta_parts)
+            headers["anthropic-dangerous-direct-browser-access"] = "true"
+            headers["x-app"] = "cli"  # Identifies as CLI application
         return headers
 
     AnthropicConfig.get_anthropic_headers = _patched_get_anthropic_headers

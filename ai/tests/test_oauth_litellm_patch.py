@@ -19,16 +19,23 @@ class TestLiteLLMAnthropicOAuthPatch:
 
     def test_oauth_token_sets_beta_header(self):
         headers = self.config.get_anthropic_headers(api_key="sk-ant-oat01-abc123")
-        assert "oauth-2025-04-20" in headers["anthropic-beta"]
+        beta = headers["anthropic-beta"]
+        assert "oauth-2025-04-20" in beta
+        assert "claude-code-20250219" in beta  # Required to identify as Claude Code
 
     def test_oauth_token_sets_browser_access_header(self):
         headers = self.config.get_anthropic_headers(api_key="sk-ant-oat01-abc123")
         assert headers["anthropic-dangerous-direct-browser-access"] == "true"
 
+    def test_oauth_token_sets_x_app_header(self):
+        headers = self.config.get_anthropic_headers(api_key="sk-ant-oat01-abc123")
+        assert headers["x-app"] == "cli"
+
     def test_regular_api_key_unchanged(self):
         headers = self.config.get_anthropic_headers(api_key="sk-ant-api03-regular")
         assert headers["x-api-key"] == "sk-ant-api03-regular"
         assert "authorization" not in headers
+        assert "x-app" not in headers  # x-app only for OAuth
 
     def test_non_anthropic_key_unchanged(self):
         headers = self.config.get_anthropic_headers(api_key="some-other-key")
@@ -50,6 +57,7 @@ class TestLiteLLMAnthropicOAuthPatch:
         patch_litellm_anthropic_oauth()
         headers = self.config.get_anthropic_headers(api_key="sk-ant-oat01-test")
         assert headers["authorization"] == "Bearer sk-ant-oat01-test"
-        # Only one oauth beta entry
+        # Only one of each beta entry
         beta_parts = [b.strip() for b in headers["anthropic-beta"].split(",")]
         assert beta_parts.count("oauth-2025-04-20") == 1
+        assert beta_parts.count("claude-code-20250219") == 1
