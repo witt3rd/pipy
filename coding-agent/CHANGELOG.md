@@ -12,16 +12,22 @@ This changelog tracks pipy-coding-agent releases and their alignment with the up
 - Added `resolve_config_value` module for shell command (`!command`) and env var resolution in config values (matches upstream `resolve-config-value.ts`)
 - Added `slash_commands.py` with centralized `BUILTIN_SLASH_COMMANDS` definitions and `SlashCommandInfo` types
 - Added `SettingsManager.reload()` method to re-read settings from files
+- Added `AgentSession.reload()` method that re-reads settings and reloads resources
+- Added `SessionManager.create_branched_session()` for creating forked sessions with correct file handling
 - Added cross-platform bash detection: Unix now falls back to PATH lookup when `/bin/bash` unavailable (Termux support)
 - Added Windows Git Bash detection in known installation paths
 
 ### Changed
 
 - Removed `ALLOWED_FRONTMATTER_FIELDS` validation from skills loader — unknown frontmatter fields are now silently ignored (matches upstream)
+- `AgentSession.set_thinking_level()` now persists the change to the session
 
 ### Fixed
 
+- Fixed thinking level persistence: when restoring a session without a `thinking_level_change` entry, use settings default instead of potentially stale session context value (matches upstream v0.51.3 fix)
+- Fixed new sessions now persist initial thinking level on creation
 - Fixed session persistence: mark `_flushed = False` when no assistant message exists yet, so all entries are written when assistant message arrives (matches upstream fork fix)
+- Fixed `create_branched_session()` updates `session_file` and `flushed` state after branching, preventing writes to parent session file (matches upstream v0.51.6 fork fix)
 
 ### Not Applicable (vs upstream v0.51.3–v0.51.6)
 
@@ -31,8 +37,6 @@ This changelog tracks pipy-coding-agent releases and their alignment with the up
 - v0.51.4: Share URLs default to pi.dev → no share feature yet
 - v0.51.5: Windows `.cmd` resolution for package installs → package management not yet ported
 - v0.51.6: `resume` keybinding action → handled through Textual keybindings
-- v0.51.6: Forked sessions write to new session files → branching not fully ported
-- v0.51.6: `/reload` picks up global settings.json changes → `reload()` method added
 - v0.51.6: Auth storage `resolveConfigValue` for `!command` API keys → utility module added (wiring to auth pending)
 
 ---

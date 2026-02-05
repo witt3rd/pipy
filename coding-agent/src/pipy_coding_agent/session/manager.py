@@ -544,6 +544,56 @@ class SessionManager:
 
         return path
 
+    def create_branched_session(self, leaf_id: str) -> str | None:
+        """Create a new session branching from the given entry.
+
+        Copies the path from root to leaf_id into a new session file,
+        then updates internal state to point at the new session.
+
+        Returns:
+            New session file path, or None if not persisting.
+        """
+        previous_session_file = self._session_file
+        path = self.get_branch(leaf_id)
+        if not path:
+            raise ValueError(f"Entry {leaf_id} not found")
+
+        new_session_id = str(uuid.uuid4())
+        timestamp = now_iso()
+
+        header: SessionHeader = {
+            "type": "session",
+            "version": CURRENT_SESSION_VERSION,
+            "id": new_session_id,
+            "timestamp": timestamp,
+            "cwd": self._cwd,
+            "parentSession": str(previous_session_file) if self._persist and previous_session_file else None,
+        }
+
+        # Collect labels for entries in the path
+        path_ids = {e.get("id") for e in path if e.get("id")}
+        label_entries = [
+            e for e in self._file_entries
+            if e.get("type") == "label" and e.get("targetId") in path_ids
+        ]
+
+        # Filter out the original session header from path
+        path_without_header = [e for e in path if e.get("type") != "session"]
+
+        self._file_entries = [header, *path_without_header, *label_entries]
+        self._session_id = new_session_id
+        self._build_index()
+
+        if self._persist:
+            file_timestamp = timestamp.replace(":", "-").replace(".", "-")
+            new_session_file = self._session_dir / f"{file_timestamp}_{new_session_id}.jsonl"
+            self._session_file = new_session_file
+            self._flushed = True
+            self._rewrite_file()
+            return str(new_session_file)
+
+        return None
+
     # =========================================================================
     # Session Listing
     # =========================================================================

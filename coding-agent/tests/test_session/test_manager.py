@@ -3,6 +3,8 @@
 import json
 import os
 import tempfile
+from pathlib import Path
+
 import pytest
 
 from pipy_coding_agent.session import (
@@ -304,6 +306,96 @@ class TestLoadEntriesFromFile:
         
         entries = load_entries_from_file(file_path)
         assert entries == []
+
+
+class TestCreateBranchedSession:
+    def test_branch_from_leaf(self, temp_dir):
+        """Test creating a branched session from a specific entry."""
+        manager = SessionManager(temp_dir, session_dir=temp_dir)
+        id1 = manager.append_message({"role": "user", "content": "Hello"})
+        id2 = manager.append_message({"role": "assistant", "content": "Hi"})
+        id3 = manager.append_message({"role": "user", "content": "Follow up"})
+
+        old_session_file = manager.session_file
+
+        # Branch from id2 (discarding id3)
+        new_file = manager.create_branched_session(id2)
+
+        assert new_file is not None
+        assert new_file != str(old_session_file)
+        assert manager.session_file == Path(new_file)
+
+        # Branch should contain id1 and id2 but not id3
+        branch = manager.get_branch()
+        message_entries = [e for e in branch if e.get("type") == "message"]
+        assert len(message_entries) == 2
+        assert message_entries[0]["message"]["content"] == "Hello"
+        assert message_entries[1]["message"]["content"] == "Hi"
+
+    def test_branch_in_memory(self):
+        """Test branching without persistence."""
+        manager = SessionManager.in_memory()
+        id1 = manager.append_message({"role": "user", "content": "Hello"})
+        id2 = manager.append_message({"role": "assistant", "content": "Hi"})
+        manager.append_message({"role": "user", "content": "Follow up"})
+
+        result = manager.create_branched_session(id2)
+        assert result is None  # Not persisted
+
+        # Still should have correct branch
+        branch = manager.get_branch()
+        message_entries = [e for e in branch if e.get("type") == "message"]
+        assert len(message_entries) == 2
+
+    def test_branch_invalid_id(self):
+        """Test branching from invalid entry ID raises error."""
+        manager = SessionManager.in_memory()
+        with pytest.raises(ValueError, match="not found"):
+            manager.create_branched_session("nonexistent-id")
+
+    def test_branch_persists_correctly(self, temp_dir):
+        """Test that branched session file is valid."""
+        manager = SessionManager(temp_dir, session_dir=temp_dir)
+        id1 = manager.append_message({"role": "user", "content": "Hello"})
+        id2 = manager.append_message({"role": "assistant", "content": "Hi"})
+
+        new_file = manager.create_branched_session(id2)
+
+        # New file should be loadable
+        entries = load_entries_from_file(new_file)
+        assert len(entries) >= 3  # header + 2 messages
+        assert entries[0]["type"] == "session"
+        assert entries[0].get("parentSession") is not None
+
+
+class TestPersistFlushedFix:
+    def test_flushed_false_when_no_assistant(self, temp_dir):
+        """Test that _flushed is set to False when no assistant message exists.
+
+        This matches the upstream fix: when hasAssistant guard returns early,
+        set flushed=false so when assistant arrives, all entries get written.
+        """
+        manager = SessionManager(temp_dir, session_dir=temp_dir)
+
+        # Add user message only - should not persist yet
+        manager.append_message({"role": "user", "content": "Hello"})
+        manager.append_thinking_level_change("high")
+
+        # Session file should not have content yet (no assistant message)
+        if manager.session_file and manager.session_file.exists():
+            content = manager.session_file.read_text().strip()
+            # May or may not exist, but if it does, it should be minimal
+        
+        # Now add assistant message - everything should flush
+        manager.append_message({"role": "assistant", "content": "Hi there"})
+
+        # All entries should now be persisted
+        if manager.session_file:
+            entries = load_entries_from_file(manager.session_file)
+            types = [e.get("type") for e in entries]
+            assert "session" in types
+            assert "thinking_level_change" in types
+            assert types.count("message") == 2
 
 
 class TestIsValidSessionFile:

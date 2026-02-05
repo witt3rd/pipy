@@ -206,8 +206,10 @@ class AgentSession:
         )
 
     def set_thinking_level(self, level: str) -> None:
-        """Change thinking level."""
+        """Change thinking level and persist to session."""
         self._thinking_level = level
+        if self._session:
+            self._session.append_thinking_level_change(level)
 
     def on_event(self, listener: Callable[[AgentSessionEvent, Any], None]) -> None:
         """Add event listener."""
@@ -258,10 +260,22 @@ class AgentSession:
 
         # Load conversation history into agent
         if self._session:
-            context = build_session_context(self._session.get_branch())
+            branch = self._session.get_branch()
+            context = build_session_context(branch)
             # Convert dict messages from session to Pydantic models
             messages = [_dict_to_message(m) for m in context.messages]
             self._agent.replace_messages(messages)
+
+            # Restore thinking level: prefer session entry, fall back to settings default
+            has_thinking_entry = any(
+                e.get("type") == "thinking_level_change" for e in branch
+            )
+            if has_thinking_entry and context.thinking_level:
+                self._thinking_level = context.thinking_level
+            elif not has_thinking_entry:
+                # Use settings default (matches upstream thinking level persistence fix)
+                default_level = self._settings.get_default_thinking_level()
+                self._thinking_level = default_level
 
         # Check if compaction needed
         compacted = False
@@ -347,7 +361,20 @@ class AgentSession:
         """Clear conversation history by starting a new session."""
         if self._session:
             self._session.new_session()
+            # Persist thinking level in new session (matches upstream)
+            self._session.append_thinking_level_change(self._thinking_level)
         self._agent.clear_messages()
+
+    def reload(self) -> None:
+        """Reload settings and resources.
+
+        Re-reads settings files and reloads skills, prompts, context files.
+        Matches upstream AgentSession.reload() behavior.
+        """
+        self._settings.reload()
+        self._resources = DefaultResourceLoader(cwd=self._cwd)
+        self._system_prompt = self._build_system_prompt()
+        self._agent._system_prompt = self._system_prompt
 
     def export_html(self) -> str:
         """Export session to HTML."""
