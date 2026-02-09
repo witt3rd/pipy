@@ -5,11 +5,13 @@ Run with: pytest tests/test_integration.py -v --run-integration
 
 import os
 
+import httpx
 import pytest
 
 from pipy_ai import (
     DoneEvent,
     SimpleStreamOptions,
+    StreamOptions,
     TextDeltaEvent,
     ThinkingDeltaEvent,
     ThinkingLevel,
@@ -18,6 +20,15 @@ from pipy_ai import (
     stream,
     user,
 )
+
+
+def _ollama_available() -> bool:
+    """Check if Ollama is running locally."""
+    try:
+        r = httpx.get("http://localhost:11434/api/tags", timeout=2)
+        return r.status_code == 200
+    except Exception:
+        return False
 
 
 class TestOpenAIIntegration:
@@ -112,3 +123,33 @@ class TestReasoningIntegration:
         done = events[-1]
         assert isinstance(done, DoneEvent)
         assert "255" in done.message.text
+
+
+class TestOllamaIntegration:
+    """Test Ollama local models."""
+
+    @pytest.mark.skipif(not _ollama_available(), reason="Ollama not running")
+    def test_complete_basic(self):
+        """Test basic completion via Ollama."""
+        result = complete(
+            "ollama/llama3.1",
+            ctx(user("Say 'hello' and nothing else")),
+            StreamOptions(max_tokens=32),
+        )
+        assert result.text.strip() != ""
+
+    @pytest.mark.skipif(not _ollama_available(), reason="Ollama not running")
+    def test_stream_basic(self):
+        """Test basic streaming via Ollama."""
+        events = list(
+            stream(
+                "ollama/llama3.1",
+                ctx(user("Say 'hello' and nothing else")),
+                StreamOptions(max_tokens=32),
+            )
+        )
+
+        text_deltas = [e for e in events if isinstance(e, TextDeltaEvent)]
+        assert len(text_deltas) > 0
+
+        assert isinstance(events[-1], DoneEvent)

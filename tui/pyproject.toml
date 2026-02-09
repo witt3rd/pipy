@@ -4,15 +4,14 @@ version = "0.51.6"
 description = "Terminal UI components for AI assistants, built on Textual. Python port inspired by Mario Zechner's pi-mono/tui."
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 authors = [{ name = "Donald Thompson", email = "donald@witt3rd.com" }]
 keywords = ["tui", "terminal", "textual", "editor", "autocomplete", "pipy"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: User Interfaces",
     "Topic :: Terminals",
 ]
@@ -50,4 +49,4 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py313"

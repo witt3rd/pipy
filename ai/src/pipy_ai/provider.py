@@ -188,6 +188,8 @@ class LiteLLMProvider:
             kwargs["temperature"] = options.temperature
         if tools:
             kwargs["tools"] = tools
+        if options.api_base:
+            kwargs["api_base"] = options.api_base
         if options.api_key:
             kwargs["api_key"] = options.api_key
             # Anthropic OAuth tokens require Claude Code identity in system prompt

@@ -4,7 +4,7 @@ version = "0.51.6"
 description = "Streaming LLM library with rich types, models.dev integration, and LiteLLM backend. Python port inspired by Mario Zechner's pi-mono/ai."
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 authors = [
     { name = "Donald Thompson", email = "donald@witt3rd.com" }
 ]
@@ -14,8 +14,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
@@ -52,13 +51,13 @@ packages = ["src/pipy_ai"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 strict = true
 
 [tool.pytest.ini_options]

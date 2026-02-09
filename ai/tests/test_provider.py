@@ -84,6 +84,16 @@ class TestBuildKwargs:
             "x-session-id": "sess-123",
         }
 
+    def test_with_api_base(self):
+        options = StreamOptions(api_base="http://localhost:11434")
+        kwargs = self.provider._build_kwargs("ollama/llama3.1", self.messages, options)
+        assert kwargs["api_base"] == "http://localhost:11434"
+
+    def test_api_base_not_set_when_none(self):
+        options = StreamOptions()
+        kwargs = self.provider._build_kwargs("gpt-4", self.messages, options)
+        assert "api_base" not in kwargs
+
     def test_anthropic_oauth_token_passed_as_api_key(self):
         """OAuth tokens are passed as api_key; litellm patch handles Bearer routing."""
         oauth_token = "sk-ant-oat01-abc123"

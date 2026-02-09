@@ -222,9 +222,14 @@ class AgentSession:
         if self._session:
             self._session.append_thinking_level_change(level)
 
-    def on_event(self, listener: Callable[[AgentSessionEvent, Any], None]) -> None:
-        """Add event listener."""
+    def on_event(self, listener: Callable[[AgentSessionEvent, Any], None]) -> Callable[[], None]:
+        """Add event listener. Returns unsubscribe callable."""
         self._listeners.append(listener)
+        return lambda: self._listeners.remove(listener) if listener in self._listeners else None
+
+    def abort(self) -> None:
+        """Abort the current agent execution."""
+        self._agent.abort()
 
     def _emit(self, event: AgentSessionEvent, data: Any = None) -> None:
         """Emit event to listeners."""

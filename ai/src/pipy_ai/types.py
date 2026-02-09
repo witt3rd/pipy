@@ -198,6 +198,7 @@ class StreamOptions(BaseModel):
     session_id: str | None = None  # Passed via x-session-id header for cache affinity
     headers: dict[str, str] | None = None  # Custom headers (merged with session_id)
     api_key: str | None = None
+    api_base: str | None = None
     # Note: max_retry_delay_ms is for API compatibility but LiteLLM handles retries internally
     max_retry_delay_ms: int = 60000
 

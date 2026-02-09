@@ -191,6 +191,14 @@ Model Aliases:
         help="Verbose output",
     )
 
+    # UI options
+    ui_group = parser.add_argument_group("UI Options")
+    ui_group.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Disable TUI, use plain REPL mode",
+    )
+
     # Other
     parser.add_argument(
         "--cwd",
@@ -639,10 +647,23 @@ async def handle_slash_command(session: AgentSession, input_text: str) -> bool |
 # Interactive Mode
 # =============================================================================
 
-async def run_interactive_async(session: AgentSession, verbose: bool = False) -> None:
-    """Run interactive mode."""
+
+def _tui_available() -> bool:
+    """Check if TUI dependencies are available."""
+    try:
+        import pipy_tui  # noqa: F401
+        import textual  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+async def run_interactive_async(
+    session: AgentSession, verbose: bool = False, no_tui: bool = False,
+) -> None:
+    """Run interactive REPL mode (fallback when TUI unavailable or disabled)."""
     from . import __version__
-    
+
     print(f"pipy-coding-agent v{__version__}")
     print(f"Model: {session.model.model_id} | Thinking: {session.thinking_level}")
     print(f"CWD: {session.cwd}")
@@ -671,19 +692,19 @@ async def run_interactive_async(session: AgentSession, verbose: bool = False) ->
         try:
             if verbose:
                 print(f"[Sending to {session.model.model_id}...]")
-            
+
             result = await session.aprompt(user_input)
-            
+
             print()
             if result.response:
                 print(result.response)
             else:
                 print("[No response]")
             print()
-            
+
             if verbose and result.tool_calls > 0:
                 print(f"[{result.tool_calls} tool call(s)]")
-                
+
         except Exception as e:
             print(f"Error: {e}")
             if verbose:
@@ -691,9 +712,21 @@ async def run_interactive_async(session: AgentSession, verbose: bool = False) ->
                 traceback.print_exc()
 
 
-def run_interactive(session: AgentSession, verbose: bool = False) -> None:
-    """Run interactive mode (sync wrapper)."""
-    asyncio.run(run_interactive_async(session, verbose))
+def run_interactive(
+    session: AgentSession, verbose: bool = False, no_tui: bool = False,
+) -> None:
+    """Run interactive mode — TUI if available, else REPL."""
+    if not no_tui and _tui_available():
+        from .tui_app import run_tui
+
+        run_tui(
+            session=session,
+            verbose=verbose,
+            slash_commands=SLASH_COMMANDS,
+            handle_slash_command_fn=handle_slash_command,
+        )
+    else:
+        asyncio.run(run_interactive_async(session, verbose, no_tui))
 
 
 # =============================================================================
@@ -901,7 +934,7 @@ def main(args: list[str] | None = None) -> int:
             
         return run_print_mode(session, prompt, parsed.verbose)
     else:
-        run_interactive(session, parsed.verbose)
+        run_interactive(session, parsed.verbose, no_tui=parsed.no_tui)
         return 0
 
 
