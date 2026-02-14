@@ -21,6 +21,9 @@ cd pipy
 # Install all packages with dev dependencies
 uv sync --all-packages --all-extras
 
+# Upgrade all packages to latest versions
+uv sync --all-packages --all-extras -U
+
 # Or install specific package
 uv sync --package pipy-ai --extra dev
 ```
